@@ -1,0 +1,49 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancel",
+    "save": "Save",
+    "retry": "Retry",
+    "loading": "Loading...",
+    "search": "Search...",
+    "error": "Something went wrong",
+    "no_data": "No incidents found",
+    "branch": "Branch",
+    "all_branches": "All Branches",
+    "back": "Back"
+  },
+  "auth": {
+    "title": "Reweu Business",
+    "subtitle": "Operations & Incident Companion",
+    "email": "Business Email",
+    "password": "Password",
+    "login": "Sign In",
+    "unlock_biometrics": "Unlock with Biometrics",
+    "logout": "Sign Out"
+  },
+  "incidents": {
+    "title": "Incident Feed",
+    "open": "Open",
+    "acknowledged": "In Progress",
+    "resolved": "Resolved",
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "acknowledge_action": "Acknowledge",
+    "resolve_action": "Resolve Incident",
+    "add_note": "Add Internal Note",
+    "note_placeholder": "Type an internal team update...",
+    "send_recovery_voucher": "Issue Customer Recovery Voucher",
+    "voucher_amount": "Voucher Amount",
+    "customer_review": "Customer Review",
+    "activity_log": "Activity Timeline",
+    "contact_customer": "Contact Customer"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "today_incidents": "Today's Incidents",
+    "mttr": "Mean Resolution Time",
+    "resolution_rate": "Resolution Rate"
+  }
+}

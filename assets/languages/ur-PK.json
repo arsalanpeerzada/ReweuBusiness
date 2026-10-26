@@ -1,0 +1,49 @@
+{
+  "common": {
+    "ok": "ٹھیک ہے",
+    "cancel": "منسوخ کریں",
+    "save": "محفوظ کریں",
+    "retry": "دوبارہ کوشش کریں",
+    "loading": "لوڈ ہو رہا ہے...",
+    "search": "تلاش کریں...",
+    "error": "کچھ غلط ہو گیا",
+    "no_data": "کوئی واقعہ نہیں ملا",
+    "branch": "برانچ",
+    "all_branches": "تمام برانچز",
+    "back": "واپس"
+  },
+  "auth": {
+    "title": "ریویو بزنس",
+    "subtitle": "آپریشنز اور شکایت کا فوری حل",
+    "email": "کاروباری ای میل",
+    "password": "پاس ورڈ",
+    "login": "لاگ ان کریں",
+    "unlock_biometrics": "بایومیٹرکس سے کھولیں",
+    "logout": "لاگ آؤٹ"
+  },
+  "incidents": {
+    "title": "شکایات کی فہرست",
+    "open": "کھلی شکایات",
+    "acknowledged": "زیرِ کارروائی",
+    "resolved": "حل شدہ",
+    "critical": "انتہائی سنگین",
+    "high": "زیادہ",
+    "medium": "درمیانہ",
+    "low": "معمولی",
+    "acknowledge_action": "توجہ دی گئی",
+    "resolve_action": "مسئلہ حل کریں",
+    "add_note": "اندرونی نوٹ شامل کریں",
+    "note_placeholder": "ٹیم کے لیے نوٹ لکھیں...",
+    "send_recovery_voucher": "صارف کو معاوضہ واؤچر بھیجیں",
+    "voucher_amount": "واؤچر کی رقم",
+    "customer_review": "صارف کی رائے",
+    "activity_log": "سرگرمی کی ٹائم لائن",
+    "contact_customer": "صارف سے رابطہ کریں"
+  },
+  "analytics": {
+    "title": "تجزیات",
+    "today_incidents": "آج کی شکایات",
+    "mttr": "حل کا اوسط وقت",
+    "resolution_rate": "حل کرنے کی شرح"
+  }
+}
