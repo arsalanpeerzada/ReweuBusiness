@@ -47,3 +47,13 @@ app.*.map.json
 # Build and environment files
 **/build/
 .env*
+
+# Release signing and per-environment Firebase config (supplied locally or by CI)
+**/key.properties
+*.p12
+*.mobileprovision
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+
+# Kotlin compiler cache
+android/.kotlin/
