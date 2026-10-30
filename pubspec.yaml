@@ -45,6 +45,8 @@ dependencies:
   google_fonts: ^6.2.1
   flutter_animate: ^4.5.2
   skeletonizer: ^2.1.2
+  package_info_plus: ^10.2.2
+  firebase_crashlytics: ^5.4.1
 
 dev_dependencies:
   flutter_test:
@@ -52,6 +54,10 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   build_runner: ^2.4.7
   json_serializable: ^6.7.1
+  bloc_test: ^10.0.0
+  mocktail: ^1.0.5
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
 
 flutter:
   uses-material-design: true
@@ -59,3 +65,24 @@ flutter:
   assets:
     - assets/languages/
     - assets/images/
+
+# iOS app icon (Android already ships branded adaptive icons).
+# Regenerate with: dart run flutter_launcher_icons
+flutter_launcher_icons:
+  android: false
+  ios: true
+  image_path: "assets/images/app_icon.png"
+  remove_alpha_ios: true
+  background_color_ios: "#0F172A"
+
+# Launch screens on both platforms.
+# Regenerate with: dart run flutter_native_splash:create
+flutter_native_splash:
+  color: "#0A0A0A"
+  image: assets/images/logo.png
+  android_12:
+    color: "#0A0A0A"
+    image: assets/images/splash_android12.png
+    icon_background_color: "#0F172A"
+  ios_content_mode: scaleAspectFit
+  fullscreen: false

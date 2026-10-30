@@ -1,7 +1,10 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/network/api_exception.dart';
 import '../../../data/models/incident.dart';
 import '../../../data/repositories/incident_repository.dart';
+import 'ui_notice.dart';
 
 // EVENTS
 abstract class IncidentDetailEvent extends Equatable {
@@ -63,32 +66,31 @@ class IncidentDetailLoading extends IncidentDetailState {}
 
 class IncidentDetailLoaded extends IncidentDetailState {
   final IncidentDetailResponse incident;
+  final bool actionInProgress;
+  final UiNotice? notice;
 
-  const IncidentDetailLoaded(this.incident);
-
-  @override
-  List<Object?> get props => [incident];
-}
-
-class IncidentDetailActionInProgress extends IncidentDetailState {
-  final IncidentDetailResponse incident;
-
-  const IncidentDetailActionInProgress(this.incident);
+  const IncidentDetailLoaded(
+    this.incident, {
+    this.actionInProgress = false,
+    this.notice,
+  });
 
   @override
-  List<Object?> get props => [incident];
+  List<Object?> get props => [incident, actionInProgress, notice];
 }
 
 class IncidentDetailError extends IncidentDetailState {
   final String message;
+  final ApiErrorKind kind;
 
-  const IncidentDetailError(this.message);
+  const IncidentDetailError(this.message, {this.kind = ApiErrorKind.unknown});
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, kind];
 }
 
 // BLOC
+/// Created per detail screen so one incident's state never shows on another.
 class IncidentDetailBloc extends Bloc<IncidentDetailEvent, IncidentDetailState> {
   final IncidentRepository _repository;
 
@@ -102,12 +104,19 @@ class IncidentDetailBloc extends Bloc<IncidentDetailEvent, IncidentDetailState> 
     FetchIncidentDetailEvent event,
     Emitter<IncidentDetailState> emit,
   ) async {
-    emit(IncidentDetailLoading());
+    final current = state;
+    if (current is! IncidentDetailLoaded) emit(IncidentDetailLoading());
     try {
       final incident = await _repository.getIncidentDetail(event.incidentId);
       emit(IncidentDetailLoaded(incident));
-    } catch (e) {
-      emit(IncidentDetailError(e.toString()));
+    } on ApiException catch (e) {
+      if (current is IncidentDetailLoaded) {
+        emit(IncidentDetailLoaded(current.incident, notice: UiNotice(e.message)));
+      } else {
+        emit(IncidentDetailError(e.message, kind: e.kind));
+      }
+    } catch (_) {
+      emit(IncidentDetailError('errors.unknown'.tr()));
     }
   }
 
@@ -116,17 +125,21 @@ class IncidentDetailBloc extends Bloc<IncidentDetailEvent, IncidentDetailState> 
     Emitter<IncidentDetailState> emit,
   ) async {
     final currentState = state;
-    if (currentState is IncidentDetailLoaded) {
-      emit(IncidentDetailActionInProgress(currentState.incident));
-      try {
-        final updatedIncident = await _repository.addComment(
-          event.incidentId,
-          event.comment,
-        );
-        emit(IncidentDetailLoaded(updatedIncident));
-      } catch (e) {
-        emit(IncidentDetailLoaded(currentState.incident));
-      }
+    if (currentState is! IncidentDetailLoaded) return;
+    emit(IncidentDetailLoaded(currentState.incident, actionInProgress: true));
+    try {
+      final updatedIncident = await _repository.addComment(
+        event.incidentId,
+        event.comment,
+      );
+      emit(IncidentDetailLoaded(
+        updatedIncident,
+        notice: UiNotice('incident_detail.note_added'.tr(), isError: false),
+      ));
+    } on ApiException catch (e) {
+      emit(IncidentDetailLoaded(currentState.incident, notice: UiNotice(e.message)));
+    } catch (_) {
+      emit(IncidentDetailLoaded(currentState.incident, notice: UiNotice('errors.unknown'.tr())));
     }
   }
 
@@ -135,22 +148,30 @@ class IncidentDetailBloc extends Bloc<IncidentDetailEvent, IncidentDetailState> 
     Emitter<IncidentDetailState> emit,
   ) async {
     final currentState = state;
-    if (currentState is IncidentDetailLoaded) {
-      emit(IncidentDetailActionInProgress(currentState.incident));
-      try {
-        await _repository.updateStatus(
-          event.incidentId,
-          status: event.status,
-          resolutionSummary: event.summary,
-          sendVoucher: event.sendVoucher,
-          voucherAmount: event.voucherAmount,
-        );
-        // Refresh detail
-        final updatedIncident = await _repository.getIncidentDetail(event.incidentId);
-        emit(IncidentDetailLoaded(updatedIncident));
-      } catch (e) {
-        emit(IncidentDetailLoaded(currentState.incident));
-      }
+    if (currentState is! IncidentDetailLoaded) return;
+    emit(IncidentDetailLoaded(currentState.incident, actionInProgress: true));
+    try {
+      await _repository.updateStatus(
+        event.incidentId,
+        status: event.status,
+        resolutionSummary: event.summary,
+        sendVoucher: event.sendVoucher,
+        voucherAmount: event.voucherAmount,
+      );
+      final updatedIncident = await _repository.getIncidentDetail(event.incidentId);
+      emit(IncidentDetailLoaded(
+        updatedIncident,
+        notice: UiNotice(
+          event.status == 'RESOLVED'
+              ? 'incident_detail.resolved_notice'.tr()
+              : 'incident_detail.status_updated'.tr(),
+          isError: false,
+        ),
+      ));
+    } on ApiException catch (e) {
+      emit(IncidentDetailLoaded(currentState.incident, notice: UiNotice(e.message)));
+    } catch (_) {
+      emit(IncidentDetailLoaded(currentState.incident, notice: UiNotice('errors.unknown'.tr())));
     }
   }
 }

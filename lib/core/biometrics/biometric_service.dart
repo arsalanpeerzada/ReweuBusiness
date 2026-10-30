@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
@@ -14,7 +15,7 @@ class BiometricService {
     try {
       final canAuthenticateWithBiometrics = await _auth.canCheckBiometrics;
       final isDeviceSupported = await _auth.isDeviceSupported();
-      return canAuthenticateWithBiometrics || isDeviceSupported;
+      return canAuthenticateWithBiometrics && isDeviceSupported;
     } on PlatformException catch (e) {
       debugPrint('Biometrics availability check error: $e');
       return false;
@@ -33,34 +34,35 @@ class BiometricService {
   Future<bool> hasFaceBiometrics() async {
     try {
       final biometrics = await getAvailableBiometrics();
-      return biometrics.contains(BiometricType.face) ||
-          biometrics.contains(BiometricType.strong);
+      return biometrics.contains(BiometricType.face);
     } catch (_) {
       return false;
     }
   }
 
+  /// Prompts for biometrics. With [biometricOnly] false the device passcode
+  /// is accepted as a fallback, which the lock screen uses so a failed sensor
+  /// never locks a manager out mid-incident.
   Future<bool> authenticate({
-    String reason = 'Scan your face to unlock Reweu Companion',
-    String title = 'Face Scan Verification',
-    bool biometricOnly = true,
+    String? reason,
+    bool biometricOnly = false,
   }) async {
     try {
       return await _auth.authenticate(
-        localizedReason: reason,
+        localizedReason: reason ?? 'biometrics.reason_unlock'.tr(),
         authMessages: [
           AndroidAuthMessages(
-            signInTitle: title,
-            biometricHint: 'Look at the camera to scan your face',
-            biometricNotRecognized: 'Face not recognized. Look directly at the camera.',
-            biometricSuccess: 'Face verified successfully',
-            cancelButton: 'Cancel',
-            deviceCredentialsRequiredTitle: 'Device Credentials Required',
-            deviceCredentialsSetupDescription:
-                'Please set up face unlock in device settings.',
+            signInTitle: 'biometrics.title'.tr(),
+            biometricHint: 'biometrics.hint'.tr(),
+            biometricNotRecognized: 'biometrics.not_recognised'.tr(),
+            biometricSuccess: 'biometrics.success'.tr(),
+            cancelButton: 'common.cancel'.tr(),
+            deviceCredentialsRequiredTitle: 'biometrics.credentials_required'.tr(),
+            deviceCredentialsSetupDescription: 'biometrics.setup_description'.tr(),
           ),
-          const IOSAuthMessages(
-            localizedFallbackTitle: 'Use Passcode',
+          IOSAuthMessages(
+            localizedFallbackTitle: 'biometrics.use_passcode'.tr(),
+            cancelButton: 'common.cancel'.tr(),
           ),
         ],
         options: AuthenticationOptions(
@@ -70,7 +72,7 @@ class BiometricService {
         ),
       );
     } on PlatformException catch (e) {
-      debugPrint('Face scan authentication error: $e');
+      debugPrint('Biometric authentication error: $e');
       return false;
     }
   }

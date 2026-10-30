@@ -68,6 +68,31 @@ class LoginUserResponse {
   }
 }
 
+class BranchSummary {
+  final int id;
+  final String name;
+  final int businessId;
+  final String? locationName;
+
+  const BranchSummary({
+    required this.id,
+    required this.name,
+    required this.businessId,
+    this.locationName,
+  });
+
+  factory BranchSummary.fromJson(Map<String, dynamic> json) {
+    return BranchSummary(
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0,
+      name: json['name']?.toString() ?? json['branchName']?.toString() ?? '',
+      businessId: json['businessId'] is int
+          ? json['businessId']
+          : int.tryParse(json['businessId']?.toString() ?? '') ?? 0,
+      locationName: json['locationName']?.toString() ?? json['address']?.toString(),
+    );
+  }
+}
+
 class BusinessSummary {
   final int id;
   final String name;

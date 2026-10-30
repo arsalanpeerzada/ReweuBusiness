@@ -1,7 +1,11 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/biometrics/biometric_service.dart';
+import '../../../core/network/api_exception.dart';
+import '../../../core/security/app_lock.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../../data/repositories/auth_repository.dart';
@@ -30,13 +34,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-  bool _canBiometric = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkBiometrics();
-  }
 
   @override
   void dispose() {
@@ -45,42 +42,46 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _checkBiometrics() async {
+  /// Offers biometric unlock once after the first password sign-in. It is
+  /// only switched on if the user agrees and passes a biometric check.
+  Future<void> _offerBiometrics() async {
+    if (widget.storageService.wasBiometricsPrompted()) return;
     final available = await widget.biometricService.isBiometricsAvailable();
-    final enabled = widget.storageService.isBiometricsEnabled();
-    final hasToken = await widget.storageService.getToken() != null;
-    if (mounted) {
-      setState(() {
-        _canBiometric = available && (enabled || hasToken);
-      });
-    }
-  }
+    if (!available || !mounted) return;
 
-  Future<void> _handleBiometricUnlock() async {
-    final token = await widget.storageService.getToken();
-    if (token == null || token.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please sign in with password first to link biometrics.'),
+    final palette = context.palette;
+    final accept = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: palette.surfaceElevated,
+        title: Text('biometrics.offer_title'.tr(), style: AppTypography.h3(ctx)),
+        content: Text('biometrics.offer_body'.tr(), style: AppTypography.body(ctx)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('biometrics.offer_decline'.tr()),
           ),
-        );
-      }
-      return;
-    }
-
-    final authenticated = await widget.biometricService.authenticate(
-      reason: 'Scan your face to unlock Reweu Companion',
-      title: 'Face Scan Authentication',
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: palette.primary,
+              foregroundColor: palette.onPrimary,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('biometrics.offer_accept'.tr()),
+          ),
+        ],
+      ),
     );
-    if (authenticated && mounted) {
-      HapticFeedback.mediumImpact();
-      final businessId = widget.storageService.getBusinessId();
-      if (businessId != null && businessId > 0) {
-        context.go('/incidents?businessId=$businessId');
-      } else {
-        context.go('/incidents');
-      }
+
+    if (accept == true) {
+      final ok = await widget.biometricService.authenticate(
+        reason: 'biometrics.reason_enable'.tr(),
+        biometricOnly: true,
+      );
+      await widget.storageService.setBiometricsEnabled(ok);
+    } else {
+      await widget.storageService.markBiometricsPrompted();
     }
   }
 
@@ -89,32 +90,32 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter both email and password.')),
-      );
+      _showError('auth.error_missing'.tr());
       return;
     }
 
-    if (password.length < 8) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password must be at least 8 characters.')),
-      );
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      _showError('auth.error_email'.tr());
       return;
     }
 
     setState(() => _isLoading = true);
     HapticFeedback.lightImpact();
+    TextInput.finishAutofillContext();
 
     try {
-      await widget.authRepository.login(
+      final user = await widget.authRepository.login(
         email: email,
         password: password,
       );
-
-      final canBiometrics = await widget.biometricService.isBiometricsAvailable();
-      if (canBiometrics) {
-        await widget.storageService.setBiometricsEnabled(true);
+      if (user.token.isEmpty) {
+        await widget.authRepository.logout();
+        throw ApiException(ApiErrorKind.server, 'errors.server'.tr());
       }
+
+      if (!mounted) return;
+      context.read<AppLockController>().reset();
+      await _offerBiometrics();
 
       if (mounted) {
         setState(() => _isLoading = false);
@@ -128,17 +129,23 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: context.palette.severityCritical,
-            content: Text(
-              e.toString().replaceAll('Exception: ', ''),
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-        );
+        _showError(e is ApiException ? e.message : 'errors.unknown'.tr());
       }
     }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          backgroundColor: context.palette.severityCritical,
+          content: Text(
+            message,
+            style: TextStyle(color: context.palette.onSeverity),
+          ),
+        ),
+      );
   }
 
   @override
@@ -149,125 +156,110 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(AppSpacing.spaceLG),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // App Logo
-                Center(
-                  child: Container(
-                    width: 76,
-                    height: 76,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0F172A),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // App Logo
+                  Center(
+                    child: AppLogo.mark(
+                      size: 76,
+                      padding: 12,
                       borderRadius: BorderRadius.circular(AppSpacing.radiusMD),
-                      border: Border.all(
-                        color: context.palette.primary.withValues(alpha: 0.3),
-                        width: 1.5,
-                      ),
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    child: const AppLogo(
-                      fit: BoxFit.contain,
-                      alignment: Alignment.center,
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-                Center(
-                  child: Text(
-                    'Reweu Companion',
-                    style: AppTypography.h1(context),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Center(
-                  child: Text(
-                    'Incident Triage & Operational Companion',
-                    style: AppTypography.bodySmall(context),
-                  ),
-                ),
-                const SizedBox(height: 36),
-
-                AutofillGroup(
-                  child: Column(
-                    children: [
-                      // Email
-                      TextField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        autocorrect: false,
-                        enableSuggestions: false,
-                        textInputAction: TextInputAction.next,
-                        autofillHints: const [AutofillHints.email],
-                        decoration: const InputDecoration(
-                          labelText: 'Business Email',
-                          hintText: 'Enter your account email',
-                          prefixIcon: Icon(Icons.email_outlined),
-                        ),
+                  Center(
+                    child: Semantics(
+                      header: true,
+                      child: Text(
+                        'auth.title'.tr(),
+                        style: AppTypography.h1(context),
                       ),
-                      const SizedBox(height: 16),
-
-                      // Password
-                      PasswordTextField(
-                        controller: _passwordController,
-                        textInputAction: TextInputAction.done,
-                        onSubmitted: (_) => _handleLogin(),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Login Button
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: context.palette.primary,
-                    foregroundColor: context.palette.onPrimary,
-                    minimumSize: const Size.fromHeight(50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusSM),
                     ),
                   ),
-                  onPressed: _isLoading ? null : _handleLogin,
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(
-                          'Sign In',
-                          style: AppTypography.button(context).copyWith(
-                            color: context.palette.onPrimary,
+                  const SizedBox(height: 6),
+                  Center(
+                    child: Text(
+                      'auth.subtitle'.tr(),
+                      style: AppTypography.bodySmall(context),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 36),
+
+                  AutofillGroup(
+                    child: Column(
+                      children: [
+                        // Email
+                        TextField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          autocorrect: false,
+                          enableSuggestions: false,
+                          enabled: !_isLoading,
+                          textInputAction: TextInputAction.next,
+                          autofillHints: const [AutofillHints.email, AutofillHints.username],
+                          decoration: InputDecoration(
+                            labelText: 'auth.email'.tr(),
+                            hintText: 'auth.email_hint'.tr(),
+                            prefixIcon: const Icon(Icons.email_outlined),
                           ),
                         ),
-                ),
-                const SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
-                // Biometrics Unlock
-                if (_canBiometric) ...[
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: context.palette.border),
+                        // Password
+                        PasswordTextField(
+                          controller: _passwordController,
+                          enabled: !_isLoading,
+                          labelText: 'auth.password'.tr(),
+                          hintText: 'auth.password_hint'.tr(),
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => _handleLogin(),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Login Button
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: context.palette.primary,
+                      foregroundColor: context.palette.onPrimary,
                       minimumSize: const Size.fromHeight(50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppSpacing.radiusSM),
                       ),
                     ),
-                    onPressed: _handleBiometricUnlock,
-                    icon: Icon(
-                      Icons.face_retouching_natural_rounded,
-                      color: context.palette.primary,
-                    ),
-                    label: Text(
-                      'Unlock with Face Scan',
-                      style: AppTypography.button(context),
-                    ),
+                    onPressed: _isLoading ? null : _handleLogin,
+                    child: _isLoading
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              semanticsLabel: 'common.loading'.tr(),
+                            ),
+                          )
+                        : Text(
+                            'auth.login'.tr(),
+                            style: AppTypography.button(context).copyWith(
+                              color: context.palette.onPrimary,
+                            ),
+                          ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'auth.help'.tr(),
+                    style: AppTypography.caption(context),
+                    textAlign: TextAlign.center,
                   ),
                 ],
-              ],
+              ),
             ),
           ),
         ),

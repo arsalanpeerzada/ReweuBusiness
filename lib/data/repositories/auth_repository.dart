@@ -6,9 +6,18 @@ class AuthRepository {
   final ApiService apiService;
   final StorageService storageService;
 
+  /// Runs after a successful sign-in (for example push registration).
+  Future<void> Function()? onSignedIn;
+
+  /// Runs before the session is cleared, while the token is still valid
+  /// (for example unregistering this device from push).
+  Future<void> Function()? onBeforeSignOut;
+
   AuthRepository({
     required this.apiService,
     required this.storageService,
+    this.onSignedIn,
+    this.onBeforeSignOut,
   });
 
   Future<LoginUserResponse> login({
@@ -46,7 +55,7 @@ class AuthRepository {
         activeBusinessId = businesses.first.id;
       }
     } catch (_) {
-      // Non-fatal if business list cannot be retrieved immediately
+      // Non-fatal: the feed retries business discovery on open.
     }
 
     await storageService.saveUserContext(
@@ -56,6 +65,10 @@ class AuthRepository {
       userName: '${loginUser.firstName} ${loginUser.lastName}'.trim(),
       roles: loginUser.roles,
     );
+
+    try {
+      await onSignedIn?.call();
+    } catch (_) {}
 
     return loginUser;
   }
@@ -68,12 +81,20 @@ class AuthRepository {
         .toList();
   }
 
+  /// Branches of [businessId] the signed-in user can access.
+  Future<List<BranchSummary>> getBranches(int businessId) async {
+    final rawList = await apiService.getMyBranches();
+    return rawList
+        .whereType<Map<String, dynamic>>()
+        .map(BranchSummary.fromJson)
+        .where((b) => b.businessId == businessId && b.id > 0)
+        .toList();
+  }
+
   Future<Map<String, dynamic>> getUserProfile() async {
-    try {
-      return await apiService.getUserProfile();
-    } catch (_) {
-      return {};
-    }
+    final userId = storageService.getUserId();
+    if (userId == null || userId <= 0) return {};
+    return apiService.getUserProfile(userId);
   }
 
   Future<void> switchBusiness(int businessId) async {
@@ -81,6 +102,8 @@ class AuthRepository {
     await storageService.saveUserContext(
       userId: userId,
       businessId: businessId,
+      // A branch belongs to one business, so reset the branch filter.
+      branchId: null,
       userEmail: storageService.getUserEmail(),
       userName: storageService.getUserName(),
       roles: storageService.getRoles(),
@@ -88,12 +111,12 @@ class AuthRepository {
   }
 
   Future<void> logout() async {
+    try {
+      await onBeforeSignOut?.call();
+    } catch (_) {}
     apiService.clearAuthToken();
     await storageService.clearAll();
   }
 
-  Future<bool> isLoggedIn() async {
-    final token = await storageService.getToken();
-    return token != null && token.isNotEmpty;
-  }
+  Future<bool> isLoggedIn() async => storageService.hasToken;
 }

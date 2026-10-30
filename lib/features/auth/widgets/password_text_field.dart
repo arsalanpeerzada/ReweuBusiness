@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../theme/app_palette.dart';
@@ -124,7 +125,7 @@ class _PasswordTextFieldState extends State<PasswordTextField> {
             size: 20,
             color: _isFocused ? palette.primary : palette.textSecondary,
           ),
-          tooltip: _obscureText ? 'Show password' : 'Hide password',
+          tooltip: _obscureText ? 'auth.show_password'.tr() : 'auth.hide_password'.tr(),
           onPressed: widget.enabled ? _toggleObscure : null,
         ),
         contentPadding: const EdgeInsets.symmetric(

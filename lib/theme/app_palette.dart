@@ -40,6 +40,16 @@ class AppPalette {
   final Color sentimentGood;
   final Color sentimentExcellent;
 
+  /// Text/icons on a filled severity colour.
+  final Color onSeverity;
+
+  /// Fixed brand navy behind the logo mark.
+  final Color brandNavy;
+
+  /// WhatsApp brand green and the text drawn on it.
+  final Color whatsApp;
+  final Color onWhatsApp;
+
   const AppPalette({
     required this.brightness,
     required this.primary,
@@ -68,6 +78,10 @@ class AppPalette {
     required this.sentimentAverage,
     required this.sentimentGood,
     required this.sentimentExcellent,
+    required this.onSeverity,
+    this.brandNavy = const Color(0xFF0F172A),
+    this.whatsApp = const Color(0xFF25D366),
+    this.onWhatsApp = const Color(0xFF0A0A0A),
   });
 
   bool get isDark => brightness == Brightness.dark;
@@ -106,6 +120,8 @@ class AppPalette {
     sentimentAverage: Color(0xFFFBBF24),
     sentimentGood: Color(0xFF38BDF8),
     sentimentExcellent: Color(0xFF4ADE80),
+
+    onSeverity: Color(0xFF0A0A0A), // Dark text on the light red 400
   );
 
   static const AppPalette light = AppPalette(
@@ -142,6 +158,8 @@ class AppPalette {
     sentimentAverage: Color(0xFFD97706),
     sentimentGood: Color(0xFF0284C7),
     sentimentExcellent: Color(0xFF16A34A),
+
+    onSeverity: Color(0xFFFFFFFF), // White on red 600
   );
 
   Color colorForSeverity(String severity) {

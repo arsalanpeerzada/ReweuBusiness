@@ -55,6 +55,34 @@ class IncidentListResponse {
   }
 }
 
+class IncidentPage {
+  final List<IncidentListResponse> items;
+  final bool isLast;
+  final int? totalElements;
+
+  /// True when the page was served from the offline cache.
+  final bool fromCache;
+
+  const IncidentPage({
+    required this.items,
+    required this.isLast,
+    this.totalElements,
+    this.fromCache = false,
+  });
+
+  factory IncidentPage.fromJson(Map<String, dynamic> json, {bool fromCache = false}) {
+    return IncidentPage(
+      items: (json['content'] as List<dynamic>? ?? const [])
+          .whereType<Map<String, dynamic>>()
+          .map(IncidentListResponse.fromJson)
+          .toList(),
+      isLast: json['last'] != false,
+      totalElements: json['totalElements'] is int ? json['totalElements'] as int : null,
+      fromCache: fromCache,
+    );
+  }
+}
+
 class AssigneeInfo {
   final int userId;
   final String name;
@@ -119,6 +147,11 @@ class IncidentDetailResponse {
   final List<AssigneeInfo> assignees;
   final List<IncidentActivityResponse> activities;
   final String? resolutionSummary;
+  final DateTime? reviewedAt;
+  final DateTime? resolvedAt;
+
+  /// True when the detail was served from the offline cache.
+  final bool fromCache;
 
   IncidentDetailResponse({
     required this.id,
@@ -136,11 +169,16 @@ class IncidentDetailResponse {
     required this.assignees,
     required this.activities,
     this.resolutionSummary,
+    this.reviewedAt,
+    this.resolvedAt,
+    this.fromCache = false,
   });
+
+  bool get isClosed => status == 'RESOLVED' || status == 'CLOSED';
 
   List<String> get metricNames => metrics.keys.toList();
 
-  factory IncidentDetailResponse.fromJson(Map<String, dynamic> json) {
+  factory IncidentDetailResponse.fromJson(Map<String, dynamic> json, {bool fromCache = false}) {
     final Map<String, double> parsedMetrics = {};
     if (json['metrics'] is Map<String, dynamic>) {
       (json['metrics'] as Map<String, dynamic>).forEach((key, val) {
@@ -181,6 +219,9 @@ class IncidentDetailResponse {
               .toList() ??
           [],
       resolutionSummary: json['resolutionSummary'],
+      reviewedAt: json['reviewedAt'] != null ? DateTime.tryParse(json['reviewedAt'].toString()) : null,
+      resolvedAt: json['resolvedAt'] != null ? DateTime.tryParse(json['resolvedAt'].toString()) : null,
+      fromCache: fromCache,
     );
   }
 }

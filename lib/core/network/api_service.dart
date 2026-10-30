@@ -1,12 +1,15 @@
 import 'package:dio/dio.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../config/api_constants.dart';
 import '../storage/storage_service.dart';
+import 'api_exception.dart';
 
 class ApiService {
   final Dio dio;
   final StorageService storageService;
   static void Function()? onSessionExpired;
   String? _authToken;
+  bool _sessionExpiryInFlight = false;
 
   ApiService({
     required this.storageService,
@@ -20,7 +23,6 @@ class ApiService {
                 headers: {
                   'Content-Type': 'application/json',
                   'Accept': 'application/json',
-                  'ngrok-skip-browser-warning': 'true',
                 },
               ),
             ) {
@@ -29,6 +31,7 @@ class ApiService {
 
   void setAuthToken(String token) {
     _authToken = token;
+    _sessionExpiryInFlight = false;
   }
 
   void clearAuthToken() {
@@ -58,7 +61,7 @@ class ApiService {
                 requestOptions: response.requestOptions,
                 response: response,
                 type: DioExceptionType.badResponse,
-                message: 'Received HTML instead of JSON from ngrok gateway.',
+                message: 'Received HTML instead of JSON.',
               ),
             );
             return;
@@ -68,7 +71,8 @@ class ApiService {
         onError: (DioException error, handler) async {
           if (error.response?.statusCode == 401) {
             final isLogin = error.requestOptions.path.contains('/login');
-            if (!isLogin) {
+            if (!isLogin && !_sessionExpiryInFlight) {
+              _sessionExpiryInFlight = true;
               clearAuthToken();
               await storageService.deleteToken();
               onSessionExpired?.call();
@@ -80,36 +84,69 @@ class ApiService {
     );
   }
 
-  String formatDioError(DioException error) {
-    if (error.response?.data != null) {
-      final data = error.response!.data;
-      if (data is Map<String, dynamic>) {
-        if (data['message'] != null && data['message'].toString().isNotEmpty) {
-          return data['message'].toString();
-        }
-        if (data['error'] != null && data['error'].toString().isNotEmpty) {
-          return data['error'].toString();
-        }
-      } else if (data is String && data.isNotEmpty) {
-        return data;
+  ApiException toApiException(DioException error) {
+    final code = error.response?.statusCode;
+    String? serverMessage;
+    final data = error.response?.data;
+    if (data is Map<String, dynamic>) {
+      final msg = data['message'] ?? data['error'];
+      if (msg != null && msg.toString().isNotEmpty) {
+        serverMessage = msg.toString();
       }
     }
+
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        return 'Connection timed out. Please check your network.';
+        return ApiException(ApiErrorKind.timeout, 'errors.timeout'.tr());
       case DioExceptionType.connectionError:
-        return 'Unable to connect to server. Please check your internet.';
+        return ApiException(ApiErrorKind.network, 'errors.network'.tr());
       case DioExceptionType.badResponse:
-        final code = error.response?.statusCode;
-        if (code == 401) return 'Invalid email or password.';
-        if (code == 403) return 'Access denied. Account not authorized.';
-        if (code == 404) return 'Requested resource not found.';
-        return 'Server returned error status ($code).';
+        if (code == 401) {
+          final isLogin = error.requestOptions.path.contains('/login');
+          return ApiException(
+            ApiErrorKind.unauthorised,
+            isLogin ? 'errors.invalid_credentials'.tr() : 'errors.session_expired'.tr(),
+            statusCode: code,
+          );
+        }
+        if (code == 403) {
+          return ApiException(ApiErrorKind.forbidden, 'errors.forbidden'.tr(), statusCode: code);
+        }
+        if (code == 404) {
+          return ApiException(ApiErrorKind.notFound, 'errors.not_found'.tr(), statusCode: code);
+        }
+        if (code != null && code >= 400 && code < 500) {
+          return ApiException(
+            ApiErrorKind.validation,
+            serverMessage ?? 'errors.request_rejected'.tr(),
+            statusCode: code,
+          );
+        }
+        return ApiException(ApiErrorKind.server, 'errors.server'.tr(), statusCode: code);
       default:
-        return error.message ?? 'An unexpected network error occurred.';
+        return ApiException(ApiErrorKind.unknown, 'errors.unknown'.tr(), statusCode: code);
     }
+  }
+
+  /// Unwraps the backend's `{status, message, path, data}` envelope.
+  dynamic _unwrap(dynamic body) {
+    if (body is Map<String, dynamic> && body.containsKey('data')) {
+      return body['data'];
+    }
+    return body;
+  }
+
+  Map<String, dynamic> _asMap(dynamic value) =>
+      value is Map<String, dynamic> ? value : <String, dynamic>{};
+
+  List<dynamic> _asContentList(dynamic value) {
+    if (value is List) return value;
+    if (value is Map<String, dynamic> && value['content'] is List) {
+      return value['content'] as List<dynamic>;
+    }
+    return const [];
   }
 
   // User Login
@@ -126,120 +163,102 @@ class ApiService {
       if (data is Map<String, dynamic>) {
         return data;
       }
-      throw Exception('Invalid response received from server.');
+      throw ApiException(ApiErrorKind.server, 'errors.server'.tr());
     } on DioException catch (e) {
-      throw Exception(formatDioError(e));
+      throw toApiException(e);
     }
   }
 
   // User Profile
-  Future<Map<String, dynamic>> getUserProfile() async {
+  Future<Map<String, dynamic>> getUserProfile(int userId) async {
     try {
-      final response = await dio.get(ApiConstants.userProfile);
-      final data = response.data;
-      if (data is Map<String, dynamic> && data['data'] != null) {
-        return data['data'] as Map<String, dynamic>;
-      }
-      return data is Map<String, dynamic> ? data : {};
+      final response = await dio.get(
+        ApiConstants.userProfile,
+        queryParameters: {'id': userId},
+      );
+      return _asMap(_unwrap(response.data));
     } on DioException catch (e) {
-      throw Exception(formatDioError(e));
+      throw toApiException(e);
     }
   }
 
   // Get User Businesses
   Future<List<dynamic>> getUserBusinesses() async {
+    ApiException? lastError;
+
+    // 1. Businesses the user owns or administers
     try {
-      // 1. First fetch user-assigned businesses (which the user has permission for)
-      try {
-        final response = await dio.get(ApiConstants.myBusinesses);
-        final data = response.data;
-        if (data is Map<String, dynamic> && data['data'] != null) {
-          final inner = data['data'];
-          if (inner is List && inner.isNotEmpty) {
-            return inner;
-          }
-        } else if (data is List && data.isNotEmpty) {
-          return data;
-        }
-      } catch (_) {}
-
-      // 2. Fallback to assigned branches (for Branch Managers / Branch Admins)
-      try {
-        final response = await dio.get(
-          ApiConstants.myBranches,
-          queryParameters: {'page': 0, 'size': 50, 'sortBy': 'Name'},
-        );
-        final data = response.data;
-        List<dynamic> branchList = [];
-        if (data is Map<String, dynamic>) {
-          if (data['data'] != null) {
-            final inner = data['data'];
-            if (inner is Map<String, dynamic> && inner['content'] is List) {
-              branchList = inner['content'] as List<dynamic>;
-            } else if (inner is List) {
-              branchList = inner;
-            }
-          } else if (data['content'] is List) {
-            branchList = data['content'] as List<dynamic>;
-          }
-        } else if (data is List) {
-          branchList = data;
-        }
-
-        if (branchList.isNotEmpty) {
-          final Map<int, Map<String, dynamic>> extractedBusinesses = {};
-          for (final b in branchList) {
-            if (b is Map<String, dynamic>) {
-              final bId = b['businessId'] is int
-                  ? b['businessId'] as int
-                  : int.tryParse(b['businessId']?.toString() ?? '');
-              if (bId != null && bId > 0 && !extractedBusinesses.containsKey(bId)) {
-                extractedBusinesses[bId] = {
-                  'id': bId,
-                  'name': b['businessName'] ?? b['name'] ?? 'Business $bId',
-                  'overAllRating': b['rating'] ?? 0.0,
-                  'logoUrl': b['logoUrl'],
-                };
-              }
-            }
-          }
-          if (extractedBusinesses.isNotEmpty) {
-            return extractedBusinesses.values.toList();
-          }
-        }
-      } catch (_) {}
-
-      // 3. Fallback to all businesses ONLY if user is a SUPER_ADMIN
-      if (storageService.isSuperAdmin()) {
-        try {
-          final response = await dio.get(ApiConstants.businesses);
-          final data = response.data;
-          if (data is Map<String, dynamic> && data['data'] != null) {
-            final inner = data['data'];
-            if (inner is List) {
-              return inner;
-            } else if (inner is Map<String, dynamic> && inner['content'] is List) {
-              return inner['content'] as List<dynamic>;
-            }
-          } else if (data is List) {
-            return data;
-          }
-        } catch (_) {}
-      }
-
-      return [];
+      final response = await dio.get(ApiConstants.myBusinesses);
+      final list = _asContentList(_unwrap(response.data));
+      if (list.isNotEmpty) return list;
     } on DioException catch (e) {
-      throw Exception(formatDioError(e));
+      lastError = toApiException(e);
+    }
+
+    // 2. Fall back to assigned branches (Branch Managers / Branch Admins)
+    try {
+      final branchList = await getMyBranches();
+      final Map<int, Map<String, dynamic>> extractedBusinesses = {};
+      for (final b in branchList) {
+        if (b is Map<String, dynamic>) {
+          final bId = b['businessId'] is int
+              ? b['businessId'] as int
+              : int.tryParse(b['businessId']?.toString() ?? '');
+          if (bId != null && bId > 0 && !extractedBusinesses.containsKey(bId)) {
+            extractedBusinesses[bId] = {
+              'id': bId,
+              'name': b['businessName'] ?? b['name'] ?? 'Business $bId',
+              'overAllRating': b['rating'] ?? 0.0,
+              'logoUrl': b['logoUrl'],
+            };
+          }
+        }
+      }
+      if (extractedBusinesses.isNotEmpty) {
+        return extractedBusinesses.values.toList();
+      }
+    } on ApiException catch (e) {
+      lastError = e;
+    }
+
+    // 3. All businesses, only for SUPER_ADMIN
+    if (storageService.isSuperAdmin()) {
+      try {
+        final response = await dio.get(ApiConstants.businesses);
+        return _asContentList(_unwrap(response.data));
+      } on DioException catch (e) {
+        lastError = toApiException(e);
+      }
+    }
+
+    if (lastError != null && lastError.isOffline) throw lastError;
+    return [];
+  }
+
+  // Branches the user can access (all businesses)
+  Future<List<dynamic>> getMyBranches() async {
+    try {
+      final response = await dio.get(
+        ApiConstants.myBranches,
+        queryParameters: {
+          'page': 0,
+          'size': AppConfig.branchPageSize,
+          'sortBy': 'Name',
+        },
+      );
+      return _asContentList(_unwrap(response.data));
+    } on DioException catch (e) {
+      throw toApiException(e);
     }
   }
 
-  // Business Incidents List
-  Future<List<dynamic>> getBusinessIncidents(
+  // Business Incidents (one page)
+  Future<Map<String, dynamic>> getBusinessIncidents(
     int businessId, {
     int? branchId,
     String? status,
     int page = 0,
-    int size = 30,
+    int size = AppConfig.incidentPageSize,
   }) async {
     try {
       final queryParams = <String, dynamic>{
@@ -254,18 +273,18 @@ class ApiService {
         queryParameters: queryParams,
       );
 
-      final data = response.data;
-      if (data is Map<String, dynamic> && data['data'] != null) {
-        final innerData = data['data'];
-        if (innerData is Map<String, dynamic> && innerData['content'] != null) {
-          return innerData['content'] as List<dynamic>;
-        } else if (innerData is List) {
-          return innerData;
-        }
+      final inner = _unwrap(response.data);
+      if (inner is List) {
+        return {'content': inner, 'last': true};
       }
-      return [];
+      final map = _asMap(inner);
+      return {
+        'content': map['content'] is List ? map['content'] : const [],
+        'last': map['last'] ?? true,
+        'totalElements': map['totalElements'],
+      };
     } on DioException catch (e) {
-      throw Exception(formatDioError(e));
+      throw toApiException(e);
     }
   }
 
@@ -273,35 +292,29 @@ class ApiService {
   Future<Map<String, dynamic>> getIncidentDetails(int id) async {
     try {
       final response = await dio.get('${ApiConstants.incidentDetails}/$id');
-      final data = response.data;
-      if (data is Map<String, dynamic> && data['data'] != null) {
-        return data['data'] as Map<String, dynamic>;
-      }
-      throw Exception('Failed to load incident details');
+      final data = _unwrap(response.data);
+      if (data is Map<String, dynamic>) return data;
+      throw ApiException(ApiErrorKind.server, 'errors.server'.tr());
     } on DioException catch (e) {
-      throw Exception(formatDioError(e));
+      throw toApiException(e);
     }
   }
 
-  // Add Comment
+  // Add internal comment. The backend takes the author from the token.
   Future<Map<String, dynamic>> addComment(int id, String comment) async {
     try {
-      final userId = storageService.getUserId() ?? 0;
       final response = await dio.post(
         '${ApiConstants.incidentDetails}/$id/comments',
-        data: {'userId': userId, 'message': comment, 'comment': comment},
+        data: {'comment': comment},
       );
-      final data = response.data;
-      if (data is Map<String, dynamic> && data['data'] != null) {
-        return data['data'] as Map<String, dynamic>;
-      }
-      return data is Map<String, dynamic> ? data : {};
+      return _asMap(_unwrap(response.data));
     } on DioException catch (e) {
-      throw Exception(formatDioError(e));
+      throw toApiException(e);
     }
   }
 
-  // Update Status & Service Recovery
+  // Update Status & Service Recovery. The backend reads these as query
+  // parameters and takes the acting user from the token.
   Future<Map<String, dynamic>> updateStatus(
     int id, {
     required String status,
@@ -310,20 +323,8 @@ class ApiService {
     double? voucherAmount,
   }) async {
     try {
-      final userId = storageService.getUserId() ?? 0;
       final queryParams = <String, dynamic>{
         'status': status,
-        'userId': userId,
-      };
-      if (resolutionSummary != null) {
-        queryParams['resolutionSummary'] = resolutionSummary;
-      }
-      if (sendVoucher) queryParams['sendVoucher'] = sendVoucher;
-      if (voucherAmount != null) queryParams['voucherAmount'] = voucherAmount;
-
-      final body = <String, dynamic>{
-        'status': status,
-        'userId': userId,
         'sendVoucher': sendVoucher,
         'resolutionSummary': ?resolutionSummary,
         'voucherAmount': ?voucherAmount,
@@ -332,17 +333,35 @@ class ApiService {
       final response = await dio.patch(
         '${ApiConstants.incidentDetails}/$id/status',
         queryParameters: queryParams,
-        data: body,
       );
-      final data = response.data;
-      if (data is Map<String, dynamic> && data['data'] != null) {
-        return data['data'] as Map<String, dynamic>;
-      }
-      return {};
+      return _asMap(_unwrap(response.data));
     } on DioException catch (e) {
-      throw Exception(formatDioError(e));
+      throw toApiException(e);
     }
   }
+
+  // Incident analytics (KPIs, trends, staff and branch performance)
+  Future<Map<String, dynamic>> getIncidentAnalytics(
+    int businessId, {
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      final response = await dio.get(
+        '${ApiConstants.incidentAnalytics}/$businessId',
+        queryParameters: {
+          if (startDate != null) 'startDate': _isoLocal(startDate),
+          if (endDate != null) 'endDate': _isoLocal(endDate),
+        },
+      );
+      return _asMap(_unwrap(response.data));
+    } on DioException catch (e) {
+      throw toApiException(e);
+    }
+  }
+
+  String _isoLocal(DateTime dt) =>
+      DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(dt);
 
   // Device Token Registration
   Future<void> registerDeviceToken({
@@ -365,7 +384,7 @@ class ApiService {
         },
       );
     } on DioException catch (e) {
-      throw Exception(formatDioError(e));
+      throw toApiException(e);
     }
   }
 
@@ -377,7 +396,7 @@ class ApiService {
         queryParameters: {'deviceToken': deviceToken},
       );
     } on DioException catch (e) {
-      throw Exception(formatDioError(e));
+      throw toApiException(e);
     }
   }
 }
