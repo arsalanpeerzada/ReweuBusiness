@@ -5,7 +5,8 @@ class ApiConstants {
   //   flutter run --dart-define=API_BASE_URL=https://staging-api.reweu.app
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://api.reweu.app',
+    //defaultValue: 'https://api.reweu.app',
+   defaultValue: 'https://fafc-182-188-94-160.ngrok-free.app'
   );
 
   // Endpoints
@@ -39,9 +40,12 @@ class AppConfig {
   /// Service recovery vouchers.
   static const String voucherCurrency = 'PKR';
   static const double maxVoucherAmount = 50000;
+  static const int maxVoucherInputLength = 7;
 
-  /// Minimum length of a resolution summary when resolving an incident.
+  /// Incident note and resolution summary limits.
   static const int minResolutionSummaryLength = 10;
+  static const int maxResolutionSummaryLength = 500;
+  static const int maxNoteLength = 500;
 
   /// Android notification channel for incident alerts.
   static const String incidentChannelId = 'incident_alerts';

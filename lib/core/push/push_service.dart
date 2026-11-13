@@ -83,6 +83,10 @@ class PushService {
       'push.channel_name'.tr(),
       description: 'push.channel_description'.tr(),
       importance: Importance.max,
+      sound: const RawResourceAndroidNotificationSound('critical_alert'),
+      playSound: true,
+      enableVibration: true,
+      vibrationPattern: Int64List.fromList([0, 500, 200, 500]),
     );
     await _local
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
@@ -213,6 +217,16 @@ class PushService {
           importance: Importance.max,
           priority: Priority.high,
           icon: 'ic_stat_notification',
+          sound: const RawResourceAndroidNotificationSound('critical_alert'),
+          playSound: true,
+          enableVibration: true,
+          vibrationPattern: Int64List.fromList([0, 500, 200, 500]),
+        ),
+        iOS: const DarwinNotificationDetails(
+          sound: 'critical_alert.caf',
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
         ),
       ),
       payload: incidentId?.toString(),

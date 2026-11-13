@@ -117,6 +117,13 @@ class ApiService {
         if (code == 404) {
           return ApiException(ApiErrorKind.notFound, 'errors.not_found'.tr(), statusCode: code);
         }
+        if (code == 429) {
+          return ApiException(
+            ApiErrorKind.validation,
+            serverMessage ?? 'errors.rate_limit'.tr(),
+            statusCode: code,
+          );
+        }
         if (code != null && code >= 400 && code < 500) {
           return ApiException(
             ApiErrorKind.validation,
@@ -257,6 +264,8 @@ class ApiService {
     int businessId, {
     int? branchId,
     String? status,
+    String? severity,
+    String? search,
     int page = 0,
     int size = AppConfig.incidentPageSize,
   }) async {
@@ -267,6 +276,12 @@ class ApiService {
       };
       if (branchId != null) queryParams['branchId'] = branchId;
       if (status != null && status != 'ALL') queryParams['status'] = status;
+      if (severity != null && severity.isNotEmpty && severity != 'ALL') {
+        queryParams['severity'] = severity;
+      }
+      if (search != null && search.trim().isNotEmpty) {
+        queryParams['search'] = search.trim();
+      }
 
       final response = await dio.get(
         '${ApiConstants.incidentsByBusiness}/$businessId',

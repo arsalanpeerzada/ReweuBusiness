@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../data/models/auth_models.dart';
 import '../../../theme/app_palette.dart';
 import '../../../theme/app_spacing.dart';
@@ -25,9 +26,20 @@ Future<int?> showBranchSelector(
         final isSelected = value == -1 ? selectedBranchId == null : value == selectedBranchId;
         return ListTile(
           contentPadding: EdgeInsets.zero,
-          leading: Icon(
-            value == -1 ? Icons.store_mall_directory_outlined : Icons.storefront_outlined,
-            color: isSelected ? palette.primary : palette.textSecondary,
+          leading: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? palette.primary.withValues(alpha: 0.15)
+                  : palette.surfaceContainer,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSM),
+            ),
+            child: Icon(
+              value == -1 ? Icons.store_mall_directory_outlined : Icons.storefront_outlined,
+              size: 20,
+              color: isSelected ? palette.primary : palette.textSecondary,
+            ),
           ),
           title: Text(
             title,
@@ -40,7 +52,10 @@ Future<int?> showBranchSelector(
               : null,
           trailing: isSelected ? Icon(Icons.check_circle, color: palette.primary, size: 20) : null,
           selected: isSelected,
-          onTap: () => Navigator.pop(ctx, value),
+          onTap: () {
+            HapticFeedback.lightImpact();
+            Navigator.pop(ctx, value);
+          },
         );
       }
 

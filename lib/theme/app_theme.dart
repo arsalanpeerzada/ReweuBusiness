@@ -11,6 +11,10 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
+      fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
+      textTheme: GoogleFonts.plusJakartaSansTextTheme(
+        ThemeData(brightness: Brightness.dark).textTheme,
+      ),
       scaffoldBackgroundColor: palette.background,
       primaryColor: palette.primary,
       colorScheme: ColorScheme.dark(
@@ -37,8 +41,29 @@ class AppTheme {
         iconTheme: IconThemeData(color: palette.textPrimary),
         titleTextStyle: GoogleFonts.outfit(
           fontSize: 18,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
           color: palette.textPrimary,
+        ),
+      ),
+      tabBarTheme: TabBarThemeData(
+        labelColor: palette.primary,
+        unselectedLabelColor: palette.textSecondary,
+        labelStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+        ),
+        unselectedLabelStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 13,
+          fontWeight: FontWeight.normal,
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          textStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.2,
+          ),
         ),
       ),
       bottomSheetTheme: BottomSheetThemeData(
@@ -74,6 +99,10 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
+      fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
+      textTheme: GoogleFonts.plusJakartaSansTextTheme(
+        ThemeData(brightness: Brightness.light).textTheme,
+      ),
       scaffoldBackgroundColor: palette.background,
       primaryColor: palette.primary,
       colorScheme: ColorScheme.light(
@@ -89,8 +118,9 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusMD),
-          side: BorderSide(color: palette.border, width: 1.0),
+          side: BorderSide(color: palette.border, width: 0.5),
         ),
+        shadowColor: Colors.black.withValues(alpha: 0.04),
         margin: EdgeInsets.zero,
       ),
       appBarTheme: AppBarTheme(
@@ -100,8 +130,29 @@ class AppTheme {
         iconTheme: IconThemeData(color: palette.textPrimary),
         titleTextStyle: GoogleFonts.outfit(
           fontSize: 18,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
           color: palette.textPrimary,
+        ),
+      ),
+      tabBarTheme: TabBarThemeData(
+        labelColor: palette.brandText,
+        unselectedLabelColor: palette.textSecondary,
+        labelStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+        ),
+        unselectedLabelStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 13,
+          fontWeight: FontWeight.normal,
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          textStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.2,
+          ),
         ),
       ),
       bottomSheetTheme: BottomSheetThemeData(

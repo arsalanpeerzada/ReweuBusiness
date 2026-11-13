@@ -94,8 +94,17 @@ class IncidentCard extends StatelessWidget {
             color: isCritical
                 ? context.palette.severityCritical.withValues(alpha: 0.5)
                 : context.palette.border,
-            width: isCritical ? 1.5 : 1.0,
+            width: isCritical ? 1.5 : (Theme.of(context).brightness == Brightness.light ? 0.5 : 1.0),
           ),
+          boxShadow: Theme.of(context).brightness == Brightness.light
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Material(
           color: Colors.transparent,
@@ -173,7 +182,7 @@ class IncidentCard extends StatelessWidget {
                                 incident.rating!.toStringAsFixed(1),
                                 style: TextStyle(
                                   fontSize: 12,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                   color: context.palette.colorForRating(incident.rating!),
                                 ),
                               ),
@@ -236,7 +245,7 @@ class IncidentCard extends StatelessWidget {
                             'incidents.acknowledge_action'.tr(),
                             style: TextStyle(
                               fontSize: 12,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               color: context.palette.brandText,
                             ),
                           ),

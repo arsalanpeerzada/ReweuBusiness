@@ -94,7 +94,9 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+    final isEmail = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
+    final isPhone = RegExp(r'^\+?[0-9\s\-()]{7,20}$').hasMatch(email);
+    if (!isEmail && !isPhone) {
       _showError('auth.error_email'.tr());
       return;
     }
@@ -197,12 +199,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         // Email
                         TextField(
                           controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
+                          keyboardType: TextInputType.text,
                           autocorrect: false,
                           enableSuggestions: false,
                           enabled: !_isLoading,
                           textInputAction: TextInputAction.next,
-                          autofillHints: const [AutofillHints.email, AutofillHints.username],
+                          autofillHints: const [AutofillHints.email, AutofillHints.username, AutofillHints.telephoneNumber],
                           decoration: InputDecoration(
                             labelText: 'auth.email'.tr(),
                             hintText: 'auth.email_hint'.tr(),

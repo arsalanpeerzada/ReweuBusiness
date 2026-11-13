@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 
@@ -18,7 +19,7 @@ class AppLogo extends StatelessWidget {
     this.fit = BoxFit.contain,
     this.alignment = Alignment.centerLeft,
     this.showBadge = false,
-    this.badgeText = 'COMPANION',
+    this.badgeText = 'PARTNERS',
   });
 
   /// Styled logo mark inside a rounded container, ideal for avatars, icons, or compact headers.
@@ -100,9 +101,9 @@ class AppLogo extends StatelessWidget {
           ),
           child: Text(
             badgeText,
-            style: TextStyle(
+            style: GoogleFonts.outfit(
               fontSize: 10,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               letterSpacing: 0.8,
               color: context.palette.primary,
             ),

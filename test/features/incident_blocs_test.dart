@@ -34,6 +34,8 @@ void main() {
           businessId: any(named: 'businessId'),
           branchId: any(named: 'branchId'),
           status: any(named: 'status'),
+          severity: any(named: 'severity'),
+          search: any(named: 'search'),
           page: any(named: 'page'),
           size: any(named: 'size'),
         )).thenAnswer((inv) async => pages[(inv.namedArguments[#page] as int).clamp(0, pages.length - 1)]);
@@ -97,6 +99,8 @@ void main() {
               businessId: 3,
               branchId: null,
               status: null,
+              severity: 'CRITICAL',
+              search: any(named: 'search'),
               page: any(named: 'page'),
               size: any(named: 'size'),
             )).called(2);

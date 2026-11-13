@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../../../core/biometrics/biometric_service.dart';
 import '../../../core/storage/storage_service.dart';
@@ -178,8 +179,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: Center(
                               child: Text(
                                 b.name.isNotEmpty ? b.name[0].toUpperCase() : 'B',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
+                                style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
                                   color: isSelected ? palette.onPrimary : palette.textPrimary,
                                 ),
                               ),
@@ -306,7 +308,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       decoration: BoxDecoration(
                         color: palette.surface,
                         borderRadius: BorderRadius.circular(AppSpacing.radiusMD),
-                        border: Border.all(color: palette.border),
+                        border: Border.all(
+                          color: palette.border,
+                          width: Theme.of(context).brightness == Brightness.light ? 0.5 : 1.0,
+                        ),
+                        boxShadow: Theme.of(context).brightness == Brightness.light
+                            ? [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
                       ),
                       child: Column(
                         children: [
@@ -322,9 +336,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               child: Center(
                                 child: Text(
                                   displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U',
-                                  style: TextStyle(
+                                  style: GoogleFonts.outfit(
                                     fontSize: 28,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                     color: palette.primary,
                                   ),
                                 ),
@@ -381,7 +395,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       decoration: BoxDecoration(
                         color: palette.surface,
                         borderRadius: BorderRadius.circular(AppSpacing.radiusMD),
-                        border: Border.all(color: palette.border),
+                        border: Border.all(
+                          color: palette.border,
+                          width: Theme.of(context).brightness == Brightness.light ? 0.5 : 1.0,
+                        ),
+                        boxShadow: Theme.of(context).brightness == Brightness.light
+                            ? [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -456,7 +482,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       decoration: BoxDecoration(
                         color: palette.surface,
                         borderRadius: BorderRadius.circular(AppSpacing.radiusMD),
-                        border: Border.all(color: palette.border),
+                        border: Border.all(
+                          color: palette.border,
+                          width: Theme.of(context).brightness == Brightness.light ? 0.5 : 1.0,
+                        ),
+                        boxShadow: Theme.of(context).brightness == Brightness.light
+                            ? [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
                       ),
                       child: Column(
                         children: [

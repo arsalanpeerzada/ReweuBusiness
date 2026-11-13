@@ -15,35 +15,35 @@ class AppTypography {
 
   static TextStyle h1(BuildContext context) => GoogleFonts.outfit(
         fontSize: 26,
-        fontWeight: FontWeight.bold,
+        fontWeight: FontWeight.w600,
         color: context.palette.textPrimary,
         height: 1.25,
       );
 
   static TextStyle h2(BuildContext context) => GoogleFonts.outfit(
         fontSize: 20,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w600,
         color: context.palette.textPrimary,
         height: 1.3,
       );
 
   static TextStyle h3(BuildContext context) => GoogleFonts.outfit(
         fontSize: 16,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
         color: context.palette.textPrimary,
         height: 1.35,
       );
 
   static TextStyle incidentCode(BuildContext context) => GoogleFonts.outfit(
         fontSize: 14,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w600,
         letterSpacing: 0.5,
         color: context.palette.textPrimary,
       );
 
   static TextStyle metricValue(BuildContext context) => GoogleFonts.outfit(
         fontSize: 30,
-        fontWeight: FontWeight.w800,
+        fontWeight: FontWeight.w600,
         color: context.palette.textPrimary,
         letterSpacing: -0.5,
       );
@@ -73,9 +73,9 @@ class AppTypography {
 
   static TextStyle caption(BuildContext context) => GoogleFonts.plusJakartaSans(
         fontSize: 11,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
         color: context.palette.textHint,
-        letterSpacing: 0.4,
+        letterSpacing: 0.2,
       );
 
   static TextStyle button(BuildContext context) => GoogleFonts.plusJakartaSans(

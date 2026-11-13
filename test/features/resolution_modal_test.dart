@@ -14,15 +14,20 @@ void main() {
       expect(ResolutionModal.validateVoucherAmount('abc'), 'resolution.voucher_invalid');
       expect(ResolutionModal.validateVoucherAmount('0'), 'resolution.voucher_positive');
       expect(ResolutionModal.validateVoucherAmount('-50'), 'resolution.voucher_positive');
+      expect(ResolutionModal.validateVoucherAmount('50001'), 'resolution.voucher_too_high');
+      expect(ResolutionModal.validateVoucherAmount('50000'), isNull);
       expect(ResolutionModal.validateVoucherAmount('9999999'), 'resolution.voucher_too_high');
       expect(ResolutionModal.validateVoucherAmount('1,500'), isNull);
       expect(ResolutionModal.validateVoucherAmount('250.50'), isNull);
     });
 
-    test('summary is required only when resolving', () {
+    test('summary length limits', () {
       expect(ResolutionModal.validateSummary('RESOLVED', 'ok'), 'resolution.summary_required');
       expect(ResolutionModal.validateSummary('RESOLVED', 'Replaced the dish and apologised'), isNull);
+      expect(ResolutionModal.validateSummary('RESOLVED', 'a' * 501), 'resolution.summary_too_long');
+      expect(ResolutionModal.validateSummary('RESOLVED', 'a' * 500), isNull);
       expect(ResolutionModal.validateSummary('ACKNOWLEDGED', ''), isNull);
+      expect(ResolutionModal.validateSummary('ACKNOWLEDGED', 'a' * 600), isNull);
     });
   });
 
@@ -53,9 +58,16 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
+    final summaryTextField = tester.widget<TextField>(find.byKey(const Key('resolution-summary')));
+    expect(summaryTextField.textAlignVertical, TextAlignVertical.top);
+    expect(summaryTextField.maxLength, 500);
+
     await tester.enterText(find.byKey(const Key('resolution-summary')), 'Manager apologised and refunded');
     await tester.tap(find.byKey(const Key('resolution-voucher-switch')));
     await tester.pumpAndSettle();
+
+    final voucherTextField = tester.widget<TextField>(find.byKey(const Key('resolution-voucher-amount')));
+    expect(voucherTextField.maxLength, 7);
 
     await tester.ensureVisible(find.byKey(const Key('resolution-submit')));
     await tester.tap(find.byKey(const Key('resolution-submit')));

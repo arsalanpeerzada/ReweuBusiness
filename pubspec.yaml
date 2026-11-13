@@ -1,5 +1,5 @@
 name: reweu_business
-description: "Reweu Business Companion & Incident Manager mobile application."
+description: "Reweu Partners - Critical Management System & Incident Companion."
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -16,6 +16,7 @@ dependencies:
   bloc: ^9.0.0
   flutter_bloc: ^9.1.1
   equatable: ^2.0.7
+  provider: ^6.1.2
 
   # Routing & Deep Linking
   go_router: ^14.8.1
@@ -65,6 +66,39 @@ flutter:
   assets:
     - assets/languages/
     - assets/images/
+    - assets/fonts/
+    - assets/google_fonts/
+    - assets/sounds/
+
+  fonts:
+    - family: Outfit
+      fonts:
+        - asset: assets/fonts/Outfit-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Outfit-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Outfit-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Outfit-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Outfit-ExtraBold.ttf
+          weight: 800
+    - family: Plus Jakarta Sans
+      fonts:
+        - asset: assets/fonts/PlusJakartaSans-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/PlusJakartaSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/PlusJakartaSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/PlusJakartaSans-Bold.ttf
+          weight: 700
+    - family: Noto Nastaliq Urdu
+      fonts:
+        - asset: assets/fonts/NotoNastaliqUrdu-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/NotoNastaliqUrdu-Bold.ttf
+          weight: 700
 
 # iOS app icon (Android already ships branded adaptive icons).
 # Regenerate with: dart run flutter_launcher_icons
@@ -78,11 +112,11 @@ flutter_launcher_icons:
 # Launch screens on both platforms.
 # Regenerate with: dart run flutter_native_splash:create
 flutter_native_splash:
-  color: "#0A0A0A"
+  color: "#00343D"
   image: assets/images/logo.png
   android_12:
-    color: "#0A0A0A"
+    color: "#00343D"
     image: assets/images/splash_android12.png
-    icon_background_color: "#0F172A"
+    icon_background_color: "#00343D"
   ios_content_mode: scaleAspectFit
   fullscreen: false

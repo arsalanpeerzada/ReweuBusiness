@@ -178,6 +178,8 @@ class IncidentFeedBloc extends Bloc<IncidentFeedEvent, IncidentFeedState> {
     return (upper == 'CRITICAL' || upper == 'ALL') ? null : _currentStatus;
   }
 
+  String? get _severityParam => _isCritical ? 'CRITICAL' : null;
+
   List<IncidentListResponse> _applyFilter(List<IncidentListResponse> items) => _isCritical
       ? items.where((i) => i.severity.toUpperCase() == 'CRITICAL').toList()
       : items;
@@ -238,6 +240,7 @@ class IncidentFeedBloc extends Bloc<IncidentFeedEvent, IncidentFeedState> {
           businessId: _currentBusinessId,
           branchId: _currentBranchId,
           status: _statusParam,
+          severity: _severityParam,
           page: _nextPage,
         );
         _nextPage++;
@@ -280,6 +283,7 @@ class IncidentFeedBloc extends Bloc<IncidentFeedEvent, IncidentFeedState> {
         businessId: _currentBusinessId,
         branchId: _currentBranchId,
         status: _statusParam,
+        severity: _severityParam,
         page: _nextPage,
       );
       _nextPage++;

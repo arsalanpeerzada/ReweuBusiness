@@ -39,9 +39,14 @@ class ResolutionModal extends StatefulWidget {
 
   /// Returns an error message key, or null when [summary] is acceptable for [status].
   static String? validateSummary(String status, String summary) {
-    if (status == 'RESOLVED' &&
-        summary.trim().length < AppConfig.minResolutionSummaryLength) {
-      return 'resolution.summary_required';
+    if (status == 'RESOLVED') {
+      final trimmed = summary.trim();
+      if (trimmed.length < AppConfig.minResolutionSummaryLength) {
+        return 'resolution.summary_required';
+      }
+      if (trimmed.length > AppConfig.maxResolutionSummaryLength) {
+        return 'resolution.summary_too_long';
+      }
     }
     return null;
   }
@@ -173,16 +178,32 @@ class _ResolutionModalState extends State<ResolutionModal> {
               key: const Key('resolution-summary'),
               controller: _summaryController,
               maxLines: 3,
-              maxLength: 1000,
+              maxLength: AppConfig.maxResolutionSummaryLength,
+              textAlignVertical: TextAlignVertical.top,
               decoration: InputDecoration(
+                alignLabelWithHint: true,
                 labelText: _selectedStatus == 'RESOLVED'
                     ? 'resolution.summary_label_required'.tr()
                     : 'resolution.summary_label'.tr(),
                 hintText: 'resolution.summary_hint'.tr(),
                 errorText: _summaryError?.tr(
-                  args: ['${AppConfig.minResolutionSummaryLength}'],
+                  args: [
+                    _summaryError == 'resolution.summary_too_long'
+                        ? '${AppConfig.maxResolutionSummaryLength}'
+                        : '${AppConfig.minResolutionSummaryLength}',
+                  ],
                 ),
               ),
+              onChanged: (val) {
+                if (_summaryError != null) {
+                  setState(() {
+                    _summaryError = ResolutionModal.validateSummary(
+                      _selectedStatus,
+                      val,
+                    );
+                  });
+                }
+              },
             ),
             const SizedBox(height: 8),
 
@@ -235,7 +256,31 @@ class _ResolutionModalState extends State<ResolutionModal> {
                         ),
                         inputFormatters: [
                           FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                          LengthLimitingTextInputFormatter(
+                            AppConfig.maxVoucherInputLength,
+                          ),
                         ],
+                        maxLength: AppConfig.maxVoucherInputLength,
+                        buildCounter: (
+                          context, {
+                          required currentLength,
+                          required isFocused,
+                          maxLength,
+                        }) => null,
+                        onChanged: (val) {
+                          if (_amountError != null ||
+                              (val.isNotEmpty &&
+                                  ResolutionModal.validateVoucherAmount(val) != null)) {
+                            setState(() {
+                              if (val.trim().isEmpty && _amountError == null) {
+                                _amountError = null;
+                              } else {
+                                _amountError =
+                                    ResolutionModal.validateVoucherAmount(val);
+                              }
+                            });
+                          }
+                        },
                         decoration: InputDecoration(
                           labelText: 'resolution.voucher_amount'.tr(
                             args: [AppConfig.voucherCurrency],

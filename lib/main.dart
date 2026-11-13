@@ -1,6 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'core/biometrics/biometric_service.dart';
 import 'core/network/api_service.dart';
 import 'core/push/push_service.dart';
@@ -16,6 +19,13 @@ import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    systemNavigationBarColor: Colors.transparent,
+  ));
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
+  GoogleFonts.config.allowRuntimeFetching = false;
   await EasyLocalization.ensureInitialized();
   await FirebaseBootstrap.init();
 
@@ -154,18 +164,19 @@ class _ReweuBusinessAppState extends State<ReweuBusinessApp> with WidgetsBinding
 
   @override
   Widget build(BuildContext context) {
-    return MultiRepositoryProvider(
+    return MultiProvider(
       providers: [
         RepositoryProvider.value(value: widget.storageService),
         RepositoryProvider.value(value: widget.incidentRepository),
         RepositoryProvider.value(value: widget.authRepository),
         RepositoryProvider.value(value: widget.biometricService),
         RepositoryProvider.value(value: widget.pushService),
-        RepositoryProvider.value(value: widget.appLock),
+        ChangeNotifierProvider.value(value: widget.appLock),
+        BlocProvider(
+          create: (context) => IncidentFeedBloc(widget.incidentRepository),
+        ),
       ],
-      child: BlocProvider(
-        create: (context) => IncidentFeedBloc(widget.incidentRepository),
-        child: MaterialApp.router(
+      child: MaterialApp.router(
           title: 'auth.title'.tr(),
           onGenerateTitle: (_) => 'auth.title'.tr(),
           debugShowCheckedModeBanner: false,
@@ -192,7 +203,6 @@ class _ReweuBusinessAppState extends State<ReweuBusinessApp> with WidgetsBinding
             );
           },
         ),
-      ),
     );
   }
 }

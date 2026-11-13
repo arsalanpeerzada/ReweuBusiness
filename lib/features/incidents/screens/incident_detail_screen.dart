@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/config/api_constants.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/security/secure_screen.dart';
 import '../../../core/widgets/offline_banner.dart';
@@ -85,6 +86,16 @@ class _IncidentDetailViewState extends State<_IncidentDetailView> {
   void _postComment() {
     final comment = _commentController.text.trim();
     if (comment.isEmpty) return;
+    if (comment.length > AppConfig.maxNoteLength) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'incident_detail.note_too_long'.tr(args: ['${AppConfig.maxNoteLength}']),
+          ),
+        ),
+      );
+      return;
+    }
     HapticFeedback.lightImpact();
     context.read<IncidentDetailBloc>().add(PostCommentEvent(widget.incidentId, comment));
     _commentController.clear();
@@ -139,6 +150,11 @@ class _IncidentDetailViewState extends State<_IncidentDetailView> {
             (prev is! IncidentDetailLoaded || prev.notice != curr.notice),
         listener: (context, state) {
           final notice = (state as IncidentDetailLoaded).notice!;
+          if (notice.isError) {
+            HapticFeedback.vibrate();
+          } else {
+            HapticFeedback.heavyImpact();
+          }
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(
@@ -218,7 +234,19 @@ class _IncidentDetailViewState extends State<_IncidentDetailView> {
                 decoration: BoxDecoration(
                   color: context.palette.surface,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMD),
-                  border: Border.all(color: context.palette.border),
+                  border: Border.all(
+                    color: context.palette.border,
+                    width: Theme.of(context).brightness == Brightness.light ? 0.5 : 1.0,
+                  ),
+                  boxShadow: Theme.of(context).brightness == Brightness.light
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,10 +270,23 @@ class _IncidentDetailViewState extends State<_IncidentDetailView> {
                       ]),
                       style: AppTypography.caption(context),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'incident_detail.status_line'.tr(args: [_statusLabel(incident.status)]),
-                      style: AppTypography.caption(context).copyWith(color: context.palette.brandText),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: _statusColor(context, incident.status),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'incident_detail.status_line'.tr(args: [_statusLabel(incident.status)]),
+                          style: AppTypography.caption(context).copyWith(color: context.palette.brandText),
+                        ),
+                      ],
                     ),
                     if (incident.branchName != null && incident.branchName!.isNotEmpty) ...[
                       const SizedBox(height: 12),
@@ -275,7 +316,19 @@ class _IncidentDetailViewState extends State<_IncidentDetailView> {
                 decoration: BoxDecoration(
                   color: context.palette.surface,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMD),
-                  border: Border.all(color: context.palette.border),
+                  border: Border.all(
+                    color: context.palette.border,
+                    width: Theme.of(context).brightness == Brightness.light ? 0.5 : 1.0,
+                  ),
+                  boxShadow: Theme.of(context).brightness == Brightness.light
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,7 +341,7 @@ class _IncidentDetailViewState extends State<_IncidentDetailView> {
                             incident.customerName?.isNotEmpty == true
                                 ? incident.customerName!
                                 : 'incident_detail.guest_reviewer'.tr(),
-                            style: AppTypography.bodyMedium(context).copyWith(fontWeight: FontWeight.bold),
+                            style: AppTypography.bodyMedium(context).copyWith(fontWeight: FontWeight.w600),
                           ),
                         ),
                         if (incident.rating != null)
@@ -376,10 +429,44 @@ class _IncidentDetailViewState extends State<_IncidentDetailView> {
                   spacing: 8,
                   runSpacing: 8,
                   children: incident.metrics.entries.map((entry) {
-                    final ratingVal = entry.value > 0 ? ' (${entry.value.toStringAsFixed(1)}★)' : '';
-                    return Chip(
-                      label: Text('${entry.key.replaceAll('_', ' ')}$ratingVal'),
-                      backgroundColor: context.palette.surfaceContainer,
+                    final val = entry.value;
+                    final isDark = Theme.of(context).brightness == Brightness.dark;
+                    final Color chipBg;
+                    final Color chipText;
+                    final Color chipBorder;
+                    if (val >= 4.0) {
+                      chipBg = isDark ? const Color(0x2E16A34A) : const Color(0xFFDCFCE7);
+                      chipText = isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A);
+                      chipBorder = isDark ? const Color(0x4016A34A) : const Color(0xFFBBF7D0);
+                    } else if (val >= 3.0) {
+                      chipBg = isDark ? const Color(0x2ED97706) : const Color(0xFFFEF3C7);
+                      chipText = isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706);
+                      chipBorder = isDark ? const Color(0x40D97706) : const Color(0xFFFDE68A);
+                    } else if (val > 0) {
+                      chipBg = isDark ? const Color(0x2EDC2626) : const Color(0xFFFEE2E2);
+                      chipText = isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626);
+                      chipBorder = isDark ? const Color(0x40DC2626) : const Color(0xFFFECACA);
+                    } else {
+                      chipBg = context.palette.surfaceContainer;
+                      chipText = context.palette.textSecondary;
+                      chipBorder = context.palette.border;
+                    }
+                    final ratingVal = val > 0 ? ' (${val.toStringAsFixed(1)}★)' : '';
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: chipBg,
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                        border: Border.all(color: chipBorder, width: 0.5),
+                      ),
+                      child: Text(
+                        '${entry.key.replaceAll('_', ' ')}$ratingVal',
+                        style: TextStyle(
+                          color: chipText,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     );
                   }).toList(),
                 ),
@@ -389,7 +476,21 @@ class _IncidentDetailViewState extends State<_IncidentDetailView> {
               if (incident.resolutionSummary?.isNotEmpty ?? false) ...[
                 Semantics(header: true, child: Text('incident_detail.resolution_summary'.tr(), style: AppTypography.h3(context))),
                 const SizedBox(height: 8),
-                Text(incident.resolutionSummary!, style: AppTypography.bodyMedium(context)),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(AppSpacing.spaceMD),
+                  decoration: BoxDecoration(
+                    color: context.palette.surfaceContainer,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSM),
+                    border: Border.all(color: context.palette.border),
+                  ),
+                  alignment: Alignment.topLeft,
+                  child: Text(
+                    incident.resolutionSummary!,
+                    style: AppTypography.bodyMedium(context),
+                    textAlign: TextAlign.start,
+                  ),
+                ),
                 const SizedBox(height: 16),
               ],
 
@@ -418,7 +519,7 @@ class _IncidentDetailViewState extends State<_IncidentDetailView> {
                                 act.performedBy?.name ?? 'incident_detail.system'.tr(),
                                 style: AppTypography.caption(context).copyWith(
                                   color: context.palette.brandText,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
@@ -459,7 +560,7 @@ class _IncidentDetailViewState extends State<_IncidentDetailView> {
                         child: TextField(
                           controller: _commentController,
                           enabled: !busy,
-                          maxLength: 1000,
+                          maxLength: AppConfig.maxNoteLength,
                           textInputAction: TextInputAction.send,
                           onSubmitted: (_) => _postComment(),
                           decoration: InputDecoration(
@@ -509,6 +610,23 @@ class _IncidentDetailViewState extends State<_IncidentDetailView> {
     final key = 'status.${status.toLowerCase()}';
     final label = key.tr();
     return label == key ? status : label;
+  }
+
+  Color _statusColor(BuildContext context, String status) {
+    switch (status.toUpperCase()) {
+      case 'OPEN':
+        return const Color(0xFFD97706);
+      case 'ACKNOWLEDGED':
+      case 'IN_PROGRESS':
+        return context.palette.primary;
+      case 'RESOLVED':
+      case 'CLOSED':
+        return const Color(0xFF2E9E5B);
+      case 'ESCALATED':
+        return const Color(0xFFD51323);
+      default:
+        return context.palette.textSecondary;
+    }
   }
 
   Widget _buildSkeleton(BuildContext context) {

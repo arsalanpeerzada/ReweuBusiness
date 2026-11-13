@@ -7,7 +7,7 @@
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
-		<string>Reweu Business</string>
+		<string>Reweu Partners</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>Reweu Business</string>
+		<string>Reweu Partners</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
@@ -40,7 +40,7 @@
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
 		<key>NSFaceIDUsageDescription</key>
-		<string>Reweu Business uses Face ID to unlock the app, because it shows customer contact details.</string>
+		<string>Reweu Partners uses Face ID to unlock the app, because it shows customer contact details.</string>
 		<key>UIApplicationSceneManifest</key>
 		<dict>
 			<key>UIApplicationSupportsMultipleScenes</key>

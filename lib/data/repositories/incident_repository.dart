@@ -18,15 +18,20 @@ class IncidentRepository {
     required int businessId,
     int? branchId,
     String? status,
+    String? severity,
+    String? search,
     int page = 0,
     int? size,
   }) async {
-    final cacheKey = 'feed_${businessId}_${branchId ?? 'all'}_${status ?? 'ALL'}';
+    final cacheKey =
+        'feed_${businessId}_${branchId ?? 'all'}_${status ?? 'ALL'}_${severity ?? 'ALL'}_${search ?? ''}';
     try {
       final raw = await _apiService.getBusinessIncidents(
         businessId,
         branchId: branchId,
         status: status,
+        severity: severity,
+        search: search,
         page: page,
         size: size ?? AppConfig.incidentPageSize,
       );

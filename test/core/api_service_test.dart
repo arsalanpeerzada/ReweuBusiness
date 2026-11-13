@@ -139,6 +139,26 @@ void main() {
     }
   });
 
+  test('429 maps to rate limit error message', () async {
+    adapter.handler = (_) => jsonBody({'message': 'Rate limit exceeded'}, status: 429);
+    try {
+      await api.login('a@b.co', 'password123');
+      fail('expected ApiException');
+    } on ApiException catch (e) {
+      expect(e.statusCode, 429);
+      expect(e.message, 'Rate limit exceeded');
+    }
+
+    adapter.handler = (_) => jsonBody('<html>Rate Limited</html>', status: 429);
+    try {
+      await api.login('a@b.co', 'password123');
+      fail('expected ApiException');
+    } on ApiException catch (e) {
+      expect(e.statusCode, 429);
+      expect(e.message, en('errors.rate_limit'));
+    }
+  });
+
   test('analytics dates are sent as ISO local date-times', () async {
     await api.getIncidentAnalytics(
       4,

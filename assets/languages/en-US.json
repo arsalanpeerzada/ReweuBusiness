@@ -10,12 +10,12 @@
     "back": "Back",
     "branch": "Branch",
     "all_branches": "All branches",
-    "badge": "BUSINESS",
+    "badge": "PARTNERS",
     "go_to_incidents": "Go to incidents"
   },
   "auth": {
-    "title": "Reweu Business",
-    "subtitle": "Incident triage for your branches",
+    "title": "Reweu Partners",
+    "subtitle": "Critical Management System for your business",
     "email": "Business email",
     "email_hint": "Enter your account email",
     "password": "Password",
@@ -30,8 +30,8 @@
     "help": "Use the account your Reweu administrator set up for you. Contact them if you cannot sign in."
   },
   "biometrics": {
-    "title": "Unlock Reweu Business",
-    "reason_unlock": "Confirm it's you to open Reweu Business",
+    "title": "Unlock Reweu Partners",
+    "reason_unlock": "Confirm it's you to open Reweu Partners",
     "reason_enable": "Confirm it's you to turn on biometric unlock",
     "hint": "Use your fingerprint or face",
     "not_recognised": "Not recognised. Try again.",
@@ -40,12 +40,12 @@
     "setup_description": "Set up a screen lock or biometrics in your device settings.",
     "use_passcode": "Use passcode",
     "offer_title": "Turn on biometric unlock?",
-    "offer_body": "Reweu Business shows customer contact details. With biometric unlock on, the app asks for your fingerprint, face or device passcode each time it opens.",
+    "offer_body": "Reweu Partners shows customer contact details. With biometric unlock on, the app asks for your fingerprint, face or device passcode each time it opens.",
     "offer_accept": "Turn on",
     "offer_decline": "Not now"
   },
   "lock": {
-    "title": "Reweu Business is locked",
+    "title": "Reweu Partners is locked",
     "body": "Unlock with your fingerprint, face or device passcode to continue.",
     "unlock": "Unlock",
     "use_password": "Sign in with password instead"
@@ -115,6 +115,7 @@
     "note_hint": "Add an internal team note",
     "send_note": "Send note",
     "note_added": "Note added.",
+    "note_too_long": "Note cannot exceed {} characters.",
     "resolve_button": "Resolve or update status",
     "resolved_notice": "Incident resolved.",
     "status_updated": "Status updated.",
@@ -127,6 +128,7 @@
     "summary_label_required": "Resolution summary",
     "summary_hint": "For example: manager apologised, dish replaced, guest satisfied.",
     "summary_required": "Describe what was done (at least {} characters).",
+    "summary_too_long": "Summary cannot exceed {} characters.",
     "voucher_title": "Service recovery voucher",
     "voucher_subtitle": "Send credit to the customer's Reweu app",
     "voucher_amount": "Voucher value ({})",
@@ -172,8 +174,8 @@
     "biometrics_enabled": "Biometric unlock is on.",
     "biometrics_disabled": "Biometric unlock is off.",
     "language": "Language",
-    "sign_out_confirm": "Sign out of Reweu Business? This device will stop receiving incident alerts.",
-    "version": "Reweu Business v{}"
+    "sign_out_confirm": "Sign out of Reweu Partners? This device will stop receiving incident alerts.",
+    "version": "Reweu Partners v{}"
   },
   "roles": {
     "super_admin": "Super admin",
@@ -207,6 +209,7 @@
     "session_expired": "Your session has expired. Please sign in again.",
     "forbidden": "Your account doesn't have access to this.",
     "not_found": "This item no longer exists.",
+    "rate_limit": "Too many requests. Please wait a few minutes before trying again.",
     "request_rejected": "The request was rejected. Check the details and try again.",
     "server": "Reweu is having a problem. Please try again shortly.",
     "unknown": "Something went wrong. Please try again.",

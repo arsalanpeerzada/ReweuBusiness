@@ -247,6 +247,11 @@ class _IncidentFeedScreenState extends State<IncidentFeedScreen> {
             (prev is! IncidentFeedLoaded || prev.notice != curr.notice),
         listener: (context, state) {
           final notice = (state as IncidentFeedLoaded).notice!;
+          if (notice.isError) {
+            HapticFeedback.vibrate();
+          } else {
+            HapticFeedback.mediumImpact();
+          }
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(
@@ -583,7 +588,7 @@ class _IncidentFeedScreenState extends State<IncidentFeedScreen> {
                 label,
                 style: TextStyle(
                   fontSize: 13,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: textColor,
                 ),
               ),

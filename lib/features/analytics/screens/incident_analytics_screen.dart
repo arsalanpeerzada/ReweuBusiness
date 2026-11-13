@@ -183,7 +183,19 @@ class _KpiTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: palette.surface,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMD),
-          border: Border.all(color: palette.border),
+          border: Border.all(
+            color: palette.border,
+            width: Theme.of(context).brightness == Brightness.light ? 0.5 : 1.0,
+          ),
+          boxShadow: Theme.of(context).brightness == Brightness.light
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,7 +234,19 @@ class _SeverityTrend extends StatelessWidget {
       decoration: BoxDecoration(
         color: palette.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMD),
-        border: Border.all(color: palette.border),
+        border: Border.all(
+          color: palette.border,
+          width: Theme.of(context).brightness == Brightness.light ? 0.5 : 1.0,
+        ),
+        boxShadow: Theme.of(context).brightness == Brightness.light
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -307,7 +331,19 @@ class _PerformanceTable extends StatelessWidget {
       decoration: BoxDecoration(
         color: palette.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMD),
-        border: Border.all(color: palette.border),
+        border: Border.all(
+          color: palette.border,
+          width: Theme.of(context).brightness == Brightness.light ? 0.5 : 1.0,
+        ),
+        boxShadow: Theme.of(context).brightness == Brightness.light
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,7 +356,7 @@ class _PerformanceTable extends StatelessWidget {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
-                headingTextStyle: AppTypography.caption(context).copyWith(fontWeight: FontWeight.bold),
+                headingTextStyle: AppTypography.caption(context).copyWith(fontWeight: FontWeight.w600),
                 dataTextStyle: AppTypography.bodySmall(context).copyWith(color: palette.textPrimary),
                 columnSpacing: 20,
                 horizontalMargin: 0,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Semantic color palette for Reweu Business Companion.
+/// Semantic color palette for Reweu Partners.
 /// Supports both Obsidian Dark (Default) and Crisp Light themes with WCAG AA/AAA compliance.
 class AppPalette {
   final Brightness brightness;
@@ -131,7 +131,7 @@ class AppPalette {
     onPrimary: Color(0xFF0A0A0A),
     brandText: Color(0xFF9A5C00), // 5.1:1 on white
 
-    background: Color(0xFFF8F9FA),
+    background: Color(0xFFFFFFFF), // Crisp pure white canvas
     surface: Color(0xFFFFFFFF),
     surfaceContainer: Color(0xFFF3F4F6),
     surfaceElevated: Color(0xFFFFFFFF),

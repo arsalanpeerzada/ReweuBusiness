@@ -14,24 +14,23 @@ void main() {
 
     expect(find.byType(AppLogo), findsOneWidget);
     expect(find.byType(Image), findsOneWidget);
-    expect(find.text('COMPANION'), findsNothing);
+    expect(find.text('PARTNERS'), findsNothing);
   });
 
-  testWidgets('AppLogo renders with COMPANION badge when showBadge is true', (tester) async {
+  testWidgets('AppLogo renders with PARTNERS badge when showBadge is true', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
           body: AppLogo(
             height: 24,
             showBadge: true,
-            badgeText: 'COMPANION',
           ),
         ),
       ),
     );
 
     expect(find.byType(AppLogo), findsOneWidget);
-    expect(find.text('COMPANION'), findsOneWidget);
+    expect(find.text('PARTNERS'), findsOneWidget);
   });
 
   testWidgets('AppLogo.mark renders styled container', (tester) async {
