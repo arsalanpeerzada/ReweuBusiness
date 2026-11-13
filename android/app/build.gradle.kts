@@ -28,7 +28,7 @@ val releaseStoreFile = signingValue("storeFile", "REWEU_KEYSTORE_PATH")
 val hasReleaseSigning = releaseStoreFile != null && file(releaseStoreFile).exists()
 
 android {
-    namespace = "com.teniqs.reweu_business"
+    namespace = "com.teniqs.reweu_partners"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "29.0.14206865"
 
@@ -39,7 +39,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.teniqs.reweu_business"
+        applicationId = "com.teniqs.reweu_partners"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

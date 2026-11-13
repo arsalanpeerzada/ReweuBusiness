@@ -10,7 +10,7 @@ import 'package:flutter/services.dart';
 class SecureScreen {
   SecureScreen._();
 
-  static const MethodChannel _channel = MethodChannel('com.teniqs.reweu_business/secure_screen');
+  static const MethodChannel _channel = MethodChannel('com.teniqs.reweu_partners/secure_screen');
   static int _holders = 0;
 
   static Future<void> enable() async {

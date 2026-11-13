@@ -1,4 +1,4 @@
-package com.teniqs.reweu_business
+package com.teniqs.reweu_partners
 
 import android.view.WindowManager
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -10,7 +10,7 @@ class MainActivity : FlutterFragmentActivity() {
         super.configureFlutterEngine(flutterEngine)
 
         // Lets Flutter block screenshots/recording on screens with customer details.
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.teniqs.reweu_business/secure_screen")
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.teniqs.reweu_partners/secure_screen")
             .setMethodCallHandler { call, result ->
                 if (call.method == "setSecure") {
                     val secure = call.argument<Boolean>("secure") ?: false

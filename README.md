@@ -1,8 +1,8 @@
-# Reweu Business
+# Reweu Partners
 
 Companion app for Reweu business owners and branch managers: a live feed of customer incidents raised from low-scoring reviews, incident triage (acknowledge, internal notes, resolve with an optional service-recovery voucher), push alerts, and incident analytics.
 
-Flutter 3.47, Dart 3.12. Android (`com.teniqs.reweu_business`) and iOS (`com.teniqs.reweuBusiness`).
+Flutter 3.47, Dart 3.12. Android (`com.teniqs.reweu_partners`) and iOS (`com.teniqs.reweuBusiness`).
 
 ## Features
 
@@ -34,7 +34,7 @@ flutter run --dart-define=API_BASE_URL=https://staging-api.reweu.app
 
 The app builds and runs without Firebase; push and crash reporting are simply off. To switch them on:
 
-1. In the Firebase console, add the Android app `com.teniqs.reweu_business` and the iOS app `com.teniqs.reweuBusiness`.
+1. In the Firebase console, add the Android app `com.teniqs.reweu_partners` and the iOS app `com.teniqs.reweuBusiness`.
 2. Android: save `google-services.json` to `android/app/`. The Gradle build detects it and applies the Google Services and Crashlytics plugins.
 3. iOS: add `GoogleService-Info.plist` to the `Runner` target in Xcode (drag it into `Runner/`, tick "Copy items if needed" and the Runner target).
 4. iOS: upload an APNs authentication key under Project settings > Cloud Messaging, and enable the Push Notifications capability for the App ID in the Apple Developer portal.
