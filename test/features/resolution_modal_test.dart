@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:reweu_business/features/incidents/widgets/resolution_modal.dart';
 import 'package:reweu_business/theme/app_theme.dart';
 
@@ -78,6 +79,9 @@ void main() {
     await tester.enterText(find.byKey(const Key('resolution-voucher-amount')), '500');
     await tester.ensureVisible(find.byKey(const Key('resolution-submit')));
     await tester.tap(find.byKey(const Key('resolution-submit')));
+    await tester.pumpAndSettle();
+
+    await tester.runAsync(() => GoogleFonts.pendingFonts());
     await tester.pumpAndSettle();
 
     expect(submitted, [

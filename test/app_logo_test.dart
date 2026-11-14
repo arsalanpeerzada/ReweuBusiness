@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:reweu_business/core/widgets/app_logo.dart';
 
 void main() {
@@ -28,6 +29,9 @@ void main() {
         ),
       ),
     );
+
+    await tester.runAsync(() => GoogleFonts.pendingFonts());
+    await tester.pumpAndSettle();
 
     expect(find.byType(AppLogo), findsOneWidget);
     expect(find.text('PARTNERS'), findsOneWidget);
