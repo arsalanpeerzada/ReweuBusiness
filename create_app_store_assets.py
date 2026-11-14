@@ -3,10 +3,12 @@ import os
 from PIL import Image, ImageDraw, ImageFont
 
 OUT_DIR = 'play_store_assets/app_store'
+OUT_61 = os.path.join(OUT_DIR, 'iphone_6_1_inch_1179x2556')
+OUT_63 = os.path.join(OUT_DIR, 'iphone_6_3_inch_1206x2622')
 OUT_67 = os.path.join(OUT_DIR, 'iphone_6_7_inch_1290x2796')
-OUT_65 = os.path.join(OUT_DIR, 'iphone_6_5_inch_1242x2688')
+os.makedirs(OUT_61, exist_ok=True)
+os.makedirs(OUT_63, exist_ok=True)
 os.makedirs(OUT_67, exist_ok=True)
-os.makedirs(OUT_65, exist_ok=True)
 
 # Brand & iOS Native UI Palette
 BRAND_TEAL = (0, 52, 61)       # #00343D
@@ -199,11 +201,14 @@ def create_raw_iphone_screen(title, right_pill=None, right_pill_bg=None, active_
 
 
 def save_both_ios_sizes(img_67, filename):
-    p67 = os.path.join(OUT_67, filename)
-    img_67.save(p67, 'PNG', optimize=True)
-    img_65 = img_67.resize((1242, 2688), Image.Resampling.LANCZOS)
-    p65 = os.path.join(OUT_65, filename)
-    img_65.save(p65, 'PNG', optimize=True)
+    os.makedirs(OUT_61, exist_ok=True)
+    os.makedirs(OUT_63, exist_ok=True)
+    os.makedirs(OUT_67, exist_ok=True)
+    img_61 = img_67.resize((1179, 2556), Image.Resampling.LANCZOS)
+    img_61.save(os.path.join(OUT_61, filename), 'PNG', optimize=True)
+    img_63 = img_67.resize((1206, 2622), Image.Resampling.LANCZOS)
+    img_63.save(os.path.join(OUT_63, filename), 'PNG', optimize=True)
+    img_67.save(os.path.join(OUT_67, filename), 'PNG', optimize=True)
 
 
 # ==============================================================================
@@ -628,8 +633,8 @@ def create_promo_banner(w, h, out_path):
     print("Saved promo banner:", out_path, banner.size)
 
 
-create_promo_banner(3840, 1648, os.path.join(OUT_DIR, 'header_3840x1648.png'))
+create_promo_banner(3840, 1646, os.path.join(OUT_DIR, 'header_3840x1646.png'))
 create_promo_banner(1920, 1280, os.path.join(OUT_DIR, 'search_results_1920x1280.png'))
-create_promo_banner(5244, 2850, os.path.join(OUT_DIR, 'header_and_search_5244x2850.png'))
+create_promo_banner(5244, 2950, os.path.join(OUT_DIR, 'header_and_search_5244x2950.png'))
 
 print("All raw iPhone screenshots (with Apple status bar & battery icons) and Header/Search Results assets created!")
