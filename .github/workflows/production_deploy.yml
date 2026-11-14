@@ -149,8 +149,16 @@ jobs:
             build/app/outputs/bundle/release/*.aab
             build/app/outputs/symbols
 
+      - name: Check Google Play Credentials
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_CONFIG_JSON || secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -n "$PLAY_JSON" ]; then
+            echo "PLAY_DEPLOY_READY=true" >> "$GITHUB_ENV"
+          fi
+
       - name: Deploy to Google Play Console
-        if: ${{ secrets.PLAY_CONFIG_JSON != '' || secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != '' }}
+        if: env.PLAY_DEPLOY_READY == 'true'
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_CONFIG_JSON || secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
@@ -298,8 +306,17 @@ jobs:
           name: reweu-partners-ios-ipa
           path: build/ios/ipa/ReweuPartners.ipa
 
+      - name: Check App Store Connect Credentials
+        if: env.SKIP_CODESIGN != 'true'
+        env:
+          APPSTORE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+        run: |
+          if [ -n "$APPSTORE_KEY" ]; then
+            echo "APPSTORE_DEPLOY_READY=true" >> "$GITHUB_ENV"
+          fi
+
       - name: Deploy to TestFlight / App Store Connect
-        if: ${{ env.SKIP_CODESIGN != 'true' && secrets.APPSTORE_PRIVATE_KEY != '' }}
+        if: env.SKIP_CODESIGN != 'true' && env.APPSTORE_DEPLOY_READY == 'true'
         uses: apple-actions/upload-testflight-build@v1
         with:
           app-path: 'build/ios/ipa/ReweuPartners.ipa'
