@@ -234,9 +234,15 @@ jobs:
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
           security set-keychain-settings -t 3600 -u build.keychain
 
-          # Import .p12 certificate
+          # Import .p12 certificate (re-pack with legacy PBE if macOS security rejects OpenSSL 3 PBES2)
           echo "$BUILD_CERTIFICATE_BASE64" | base64 --decode > certificate.p12
-          security import certificate.p12 -k build.keychain -P "$P12_PASSWORD" -T /usr/bin/codesign
+          if ! security import certificate.p12 -k build.keychain -P "$P12_PASSWORD" -T /usr/bin/codesign 2>/dev/null; then
+            openssl pkcs12 -in certificate.p12 -passin "pass:$P12_PASSWORD" -nodes -out temp.pem
+            openssl pkcs12 -export -legacy -in temp.pem -out certificate_legacy.p12 -passout "pass:$P12_PASSWORD" 2>/dev/null || \
+              openssl pkcs12 -export -in temp.pem -out certificate_legacy.p12 -passout "pass:$P12_PASSWORD" -certpbe PBE-SHA1-3DES -keypbe PBE-SHA1-3DES -macalg SHA1
+            rm -f temp.pem
+            security import certificate_legacy.p12 -k build.keychain -P "$P12_PASSWORD" -T /usr/bin/codesign
+          fi
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
 
           # Apply provisioning profile
