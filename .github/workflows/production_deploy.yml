@@ -180,6 +180,18 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
+      - name: Configure Firebase (GoogleService-Info.plist)
+        env:
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          if [ -n "$GOOGLE_SERVICE_INFO_PLIST" ]; then
+            printf '%s\n' "$GOOGLE_SERVICE_INFO_PLIST" > ios/Runner/GoogleService-Info.plist
+            echo "GoogleService-Info.plist configured."
+          else
+            echo "::error::GOOGLE_SERVICE_INFO_PLIST secret is not set."
+            exit 1
+          fi
+
       - name: Install CocoaPods
         run: |
           cd ios
@@ -245,7 +257,7 @@ jobs:
               <string>$TEAM_ID</string>
               <key>provisioningProfiles</key>
               <dict>
-                  <key>com.teniqs.reweuBusiness</key>
+                  <key>com.teniqs.reweupartners</key>
                   <string>$PROFILE_UUID</string>
               </dict>
               <key>signingCertificate</key>

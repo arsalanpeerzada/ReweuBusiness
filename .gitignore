@@ -49,9 +49,16 @@ app.*.map.json
 .env*
 
 # Release signing and per-environment Firebase config (supplied locally or by CI)
+.secrets/
 **/key.properties
 *.p12
 *.mobileprovision
+*.key
+*.csr
+*.cer
+*.pem
+*.p8
+*.jks
 android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
 
