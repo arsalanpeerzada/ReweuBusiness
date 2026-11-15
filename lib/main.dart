@@ -12,6 +12,7 @@ import 'core/storage/storage_service.dart';
 import 'core/widgets/app_logo.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/incident_repository.dart';
+import 'data/repositories/support_repository.dart';
 import 'features/incidents/bloc/incident_feed_bloc.dart';
 import 'routes/app_router.dart';
 import 'theme/app_palette.dart';
@@ -33,6 +34,10 @@ void main() async {
   final storageService = await StorageService.init();
   final apiService = ApiService(storageService: storageService);
   final incidentRepository = IncidentRepository(apiService, cache: storageService);
+  final supportRepository = SupportRepository(
+    apiService: apiService,
+    storageService: storageService,
+  );
   final pushService = PushService(
     apiService: apiService,
     storageService: storageService,
@@ -65,6 +70,7 @@ void main() async {
       child: ReweuBusinessApp(
         storageService: storageService,
         incidentRepository: incidentRepository,
+        supportRepository: supportRepository,
         authRepository: authRepository,
         biometricService: biometricService,
         pushService: pushService,
@@ -78,6 +84,7 @@ void main() async {
 class ReweuBusinessApp extends StatefulWidget {
   final StorageService storageService;
   final IncidentRepository incidentRepository;
+  final SupportRepository supportRepository;
   final AuthRepository authRepository;
   final BiometricService biometricService;
   final PushService pushService;
@@ -88,6 +95,7 @@ class ReweuBusinessApp extends StatefulWidget {
     super.key,
     required this.storageService,
     required this.incidentRepository,
+    required this.supportRepository,
     required this.authRepository,
     required this.biometricService,
     required this.pushService,
@@ -169,6 +177,7 @@ class _ReweuBusinessAppState extends State<ReweuBusinessApp> with WidgetsBinding
       providers: [
         RepositoryProvider.value(value: widget.storageService),
         RepositoryProvider.value(value: widget.incidentRepository),
+        RepositoryProvider.value(value: widget.supportRepository),
         RepositoryProvider.value(value: widget.authRepository),
         RepositoryProvider.value(value: widget.biometricService),
         RepositoryProvider.value(value: widget.pushService),

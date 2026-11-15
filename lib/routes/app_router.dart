@@ -11,6 +11,7 @@ import '../features/auth/screens/login_screen.dart';
 import '../features/incidents/screens/incident_detail_screen.dart';
 import '../features/incidents/screens/incident_feed_screen.dart';
 import '../features/profile/screens/profile_screen.dart';
+import '../features/support/screens/support_chat_screen.dart';
 import '../theme/app_palette.dart';
 import '../theme/app_typography.dart';
 
@@ -73,6 +74,17 @@ class AppRouter {
           authRepository: authRepository,
           biometricService: biometricService,
         ),
+      ),
+      GoRoute(
+        path: '/support/chat',
+        builder: (context, state) {
+          final incidentId = int.tryParse(state.uri.queryParameters['incidentId'] ?? '');
+          final incidentCode = state.uri.queryParameters['incidentCode'];
+          return SupportChatScreen(
+            incidentId: incidentId,
+            incidentCode: incidentCode,
+          );
+        },
       ),
       GoRoute(
         path: '/analytics',

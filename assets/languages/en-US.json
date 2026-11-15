@@ -215,5 +215,33 @@
     "unknown": "Something went wrong. Please try again.",
     "no_business": "No business is linked to your account. Ask your Reweu administrator to give you access.",
     "page_not_found": "This page doesn't exist."
+  },
+  "support": {
+    "title": "Partner Support",
+    "subtitle": "Reach the Reweu Super Admin team directly.",
+    "contact_button": "Contact Super Admin",
+    "escalate_tooltip": "Escalate to Super Admin",
+    "call_title": "Call Super Admin",
+    "call_with_hours": "Call Super Admin ({})",
+    "call_now": "Call",
+    "hours_format": "Available {}",
+    "phone_hours_banner": "Phone support: {}",
+    "phone_unavailable": "Phone hotline not configured yet. Use 24/7 chat instead.",
+    "chat_title": "Chat with Super Admin",
+    "chat_24_7": "24/7 Partner Support Chat",
+    "chat_hint": "Write a message to Super Admin...",
+    "chat_empty_title": "24/7 Direct Line to Super Admin",
+    "chat_empty_subtitle": "Ask about account access, incident escalations, or platform issues anytime.",
+    "chat_unavailable_title": "In-app chat is not active yet",
+    "chat_unavailable_body": "You can still reach the Super Admin team immediately via WhatsApp or phone.",
+    "escalating_incident": "Linked to incident {}",
+    "whatsapp_title": "Chat on WhatsApp",
+    "whatsapp_subtitle": "Opens WhatsApp with your partner details",
+    "whatsapp_prefill": "Hi Reweu Super Admin, I need help with my partner account.",
+    "whatsapp_prefill_incident": "Hi Reweu Super Admin, I need assistance with incident {}.",
+    "email_title": "Email Support",
+    "email_subject": "Reweu Partners Support Request",
+    "super_admin": "Super Admin",
+    "you": "You"
   }
 }

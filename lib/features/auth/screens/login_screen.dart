@@ -9,6 +9,8 @@ import '../../../core/security/app_lock.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../../data/repositories/auth_repository.dart';
+import '../../../data/repositories/support_repository.dart';
+import '../../support/widgets/support_contact_sheet.dart';
 import '../../../theme/app_palette.dart';
 import '../../../theme/app_spacing.dart';
 import '../../../theme/app_typography.dart';
@@ -259,6 +261,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     'auth.help'.tr(),
                     style: AppTypography.caption(context),
                     textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton.icon(
+                    onPressed: _isLoading
+                        ? null
+                        : () {
+                            SupportContactSheet.show(
+                              context,
+                              supportRepository: context.read<SupportRepository>(),
+                              allowInAppChat: false,
+                            );
+                          },
+                    icon: const Icon(Icons.support_agent_outlined, size: 18),
+                    label: Text('support.contact_button'.tr()),
                   ),
                 ],
               ),

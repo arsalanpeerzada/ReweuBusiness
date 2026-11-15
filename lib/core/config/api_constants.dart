@@ -20,6 +20,8 @@ class ApiConstants {
   static const String incidentAnalytics = '/api/incidents/analytics/business';
   static const String registerDevice = '/api/users/devices/register';
   static const String unregisterDevice = '/api/users/devices/unregister';
+  static const String supportConfig = '/api/config/support';
+  static const String supportChatMessages = '/api/support/chat/messages';
 }
 
 class AppConfig {
