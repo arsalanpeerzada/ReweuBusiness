@@ -33,7 +33,7 @@ class FirebaseBootstrap {
 
   static Future<bool> init() async {
     try {
-      await Firebase.initializeApp();
+      await Firebase.initializeApp().timeout(const Duration(seconds: 5));
       available = true;
     } catch (e) {
       debugPrint('Firebase is not configured, push and crash reporting are off: $e');
@@ -41,13 +41,24 @@ class FirebaseBootstrap {
       return false;
     }
 
-    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(!kDebugMode);
-    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-    PlatformDispatcher.instance.onError = (error, stack) {
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-      return true;
-    };
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    try {
+      await FirebaseCrashlytics.instance
+          .setCrashlyticsCollectionEnabled(!kDebugMode)
+          .timeout(const Duration(seconds: 3));
+      FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+      PlatformDispatcher.instance.onError = (error, stack) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        return true;
+      };
+    } catch (e) {
+      debugPrint('Crashlytics setup failed: $e');
+    }
+
+    try {
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    } catch (e) {
+      debugPrint('FirebaseMessaging background handler registration failed: $e');
+    }
     return true;
   }
 }

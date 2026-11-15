@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -8,11 +9,14 @@ import '../../../core/biometrics/biometric_service.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../../data/models/auth_models.dart';
+import '../../../data/models/support_config.dart';
 import '../../../data/repositories/auth_repository.dart';
+import '../../../data/repositories/support_repository.dart';
 import '../../../theme/app_palette.dart';
 import '../../../theme/app_spacing.dart';
 import '../../../theme/app_typography.dart';
 import '../../auth/sign_out.dart';
+import '../../support/widgets/support_contact_sheet.dart';
 
 class ProfileScreen extends StatefulWidget {
   final StorageService storageService;
@@ -37,6 +41,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic> _userProfile = {};
   List<BusinessSummary> _businesses = [];
   int? _activeBusinessId;
+  SupportConfig? _supportConfig;
   String _version = '';
 
   @override
@@ -47,6 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
+    final supportRepo = context.read<SupportRepository>();
 
     final bioAvailable = await widget.biometricService.isBiometricsAvailable();
     final bioEnabled = widget.storageService.isBiometricsEnabled();
@@ -66,6 +72,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       businesses = await widget.authRepository.getUserBusinesses();
     } catch (_) {}
 
+    SupportConfig? supportConfig;
+    try {
+      supportConfig = await supportRepo.getSupportConfig(forceRefresh: true);
+    } catch (_) {}
+
     try {
       final info = await PackageInfo.fromPlatform();
       version = '${info.version}+${info.buildNumber}';
@@ -78,6 +89,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _userProfile = profile;
         _businesses = businesses;
         _activeBusinessId = currentBusinessId;
+        _supportConfig = supportConfig;
         _version = version;
         _isLoading = false;
       });
@@ -559,6 +571,96 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
                           ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Partner Support Section (Chat & Call Super Admin)
+                    Semantics(header: true, child: Text('support.title'.tr(), style: AppTypography.h3(context))),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: palette.surface,
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusMD),
+                        border: Border.all(
+                          color: palette.border,
+                          width: Theme.of(context).brightness == Brightness.light ? 0.5 : 1.0,
+                        ),
+                        boxShadow: Theme.of(context).brightness == Brightness.light
+                            ? [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Column(
+                        children: [
+                          ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.spaceMD,
+                              vertical: 4,
+                            ),
+                            leading: Icon(Icons.chat_bubble_outline_rounded, color: palette.primary),
+                            title: Text('support.chat_title'.tr(), style: AppTypography.body(context)),
+                            subtitle: Text('support.chat_24_7'.tr(), style: AppTypography.caption(context)),
+                            trailing: Icon(Icons.chevron_right, color: palette.textHint),
+                            onTap: (_supportConfig?.isChatEnabled ?? true)
+                                ? () {
+                                    HapticFeedback.lightImpact();
+                                    context.push('/support/chat');
+                                  }
+                                : null,
+                          ),
+                          Divider(height: 1, color: palette.borderSubtle),
+                          ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.spaceMD,
+                              vertical: 4,
+                            ),
+                            leading: Icon(
+                              Icons.call_rounded,
+                              color: _supportConfig?.hasPhone == true ? palette.primary : palette.textSecondary,
+                            ),
+                            title: Text('support.call_title'.tr(), style: AppTypography.body(context)),
+                            subtitle: Text(
+                              _supportConfig != null && _supportConfig!.supportHours.isNotEmpty
+                                  ? 'support.hours_format'.tr(args: [_supportConfig!.supportHours])
+                                  : (_supportConfig?.hasPhone == true
+                                      ? _supportConfig!.phone
+                                      : 'support.phone_unavailable'.tr()),
+                              style: AppTypography.caption(context),
+                            ),
+                            trailing: _supportConfig?.hasPhone == true
+                                ? Icon(Icons.open_in_new, size: 18, color: palette.brandText)
+                                : null,
+                            onTap: _supportConfig?.hasPhone == true
+                                ? () {
+                                    HapticFeedback.lightImpact();
+                                    launchSupportCall(context, _supportConfig!.phone);
+                                  }
+                                : null,
+                          ),
+                          if (_supportConfig?.hasWhatsapp == true) ...[
+                            Divider(height: 1, color: palette.borderSubtle),
+                            ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.spaceMD,
+                                vertical: 4,
+                              ),
+                              leading: Icon(Icons.forum_outlined, color: palette.primary),
+                              title: Text('support.whatsapp_title'.tr(), style: AppTypography.body(context)),
+                              subtitle: Text('support.whatsapp_subtitle'.tr(), style: AppTypography.caption(context)),
+                              trailing: Icon(Icons.open_in_new, size: 18, color: palette.brandText),
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                launchSupportWhatsApp(context, _supportConfig!.whatsapp!);
+                              },
+                            ),
+                          ],
                         ],
                       ),
                     ),

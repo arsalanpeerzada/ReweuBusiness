@@ -414,4 +414,52 @@ class ApiService {
       throw toApiException(e);
     }
   }
+
+  // Public / Partner Support Configuration (phone, whatsapp, email, supportHours)
+  Future<Map<String, dynamic>> getSupportConfig() async {
+    try {
+      final response = await dio.get(ApiConstants.supportConfig);
+      return _asMap(_unwrap(response.data));
+    } on DioException catch (e) {
+      throw toApiException(e);
+    }
+  }
+
+  // Partner <-> Super Admin Chat
+  Future<List<dynamic>> getSupportMessages({int? incidentId}) async {
+    try {
+      final response = await dio.get(
+        ApiConstants.supportChatMessages,
+        queryParameters: {
+          if (incidentId != null && incidentId > 0) 'incidentId': incidentId,
+        },
+      );
+      final inner = _unwrap(response.data);
+      if (inner is List) return inner;
+      if (inner is Map && inner['content'] is List) {
+        return inner['content'] as List<dynamic>;
+      }
+      return [];
+    } on DioException catch (e) {
+      throw toApiException(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> sendSupportMessage({
+    required String message,
+    int? incidentId,
+  }) async {
+    try {
+      final response = await dio.post(
+        ApiConstants.supportChatMessages,
+        data: {
+          'message': message,
+          if (incidentId != null && incidentId > 0) 'incidentId': incidentId,
+        },
+      );
+      return _asMap(_unwrap(response.data));
+    } on DioException catch (e) {
+      throw toApiException(e);
+    }
+  }
 }

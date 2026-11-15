@@ -10,9 +10,11 @@ import '../../../core/security/secure_screen.dart';
 import '../../../core/widgets/offline_banner.dart';
 import '../../../data/models/incident.dart';
 import '../../../data/repositories/incident_repository.dart';
+import '../../../data/repositories/support_repository.dart';
 import '../../../theme/app_palette.dart';
 import '../../../theme/app_spacing.dart';
 import '../../../theme/app_typography.dart';
+import '../../support/widgets/support_contact_sheet.dart';
 import '../bloc/incident_detail_bloc.dart';
 import '../bloc/incident_feed_bloc.dart';
 import '../widgets/resolution_modal.dart';
@@ -133,6 +135,21 @@ class _IncidentDetailViewState extends State<_IncidentDetailView> {
       appBar: AppBar(
         title: Text('incident_detail.title'.tr(), style: AppTypography.h2(context)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.support_agent_outlined),
+            tooltip: 'support.escalate_tooltip'.tr(),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              final state = context.read<IncidentDetailBloc>().state;
+              final code = state is IncidentDetailLoaded ? state.incident.code : null;
+              SupportContactSheet.show(
+                context,
+                supportRepository: context.read<SupportRepository>(),
+                incidentId: widget.incidentId,
+                incidentCode: code,
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'common.refresh'.tr(),

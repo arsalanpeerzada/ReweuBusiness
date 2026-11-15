@@ -22,6 +22,7 @@ class StorageService {
 
   static const String _keyUserEmail = 'user_email';
   static const String _keyUserName = 'user_name';
+  static const String _keySupportConfig = 'support_config';
 
   final FlutterSecureStorage _secureStorage;
   final SharedPreferences prefs;
@@ -153,6 +154,13 @@ class StorageService {
 
   String? getPushToken() => prefs.getString(_keyPushToken);
 
+  // Cached public support contact configuration (phone, whatsapp, email, hours)
+  Future<void> saveSupportConfigJson(String json) async {
+    await prefs.setString(_keySupportConfig, json);
+  }
+
+  String? getSupportConfigJson() => prefs.getString(_keySupportConfig);
+
   // Offline cache (encrypted, cleared on sign out)
   Future<void> writeCache(String key, Object json) async {
     await _writeSecure('$_cachePrefix$key', jsonEncode(json));
@@ -173,15 +181,15 @@ class StorageService {
     try {
       await _secureStorage.deleteAll();
     } catch (_) {}
-    // Keep the language choice (stored by easy_localization) across sign-ins.
+    // Keep the language choice (stored by easy_localization) and public support config across sign-ins.
     for (final key in prefs.getKeys().toList()) {
-      if (key != 'locale') await prefs.remove(key);
+      if (key != 'locale' && key != _keySupportConfig) await prefs.remove(key);
     }
   }
 
   Future<String?> _readSecure(String key) async {
     try {
-      return await _secureStorage.read(key: key);
+      return await _secureStorage.read(key: key).timeout(const Duration(seconds: 5));
     } catch (_) {
       return null;
     }
@@ -189,13 +197,13 @@ class StorageService {
 
   Future<void> _writeSecure(String key, String value) async {
     try {
-      await _secureStorage.write(key: key, value: value);
+      await _secureStorage.write(key: key, value: value).timeout(const Duration(seconds: 5));
     } catch (_) {}
   }
 
   Future<void> _deleteSecure(String key) async {
     try {
-      await _secureStorage.delete(key: key);
+      await _secureStorage.delete(key: key).timeout(const Duration(seconds: 5));
     } catch (_) {}
   }
 }
