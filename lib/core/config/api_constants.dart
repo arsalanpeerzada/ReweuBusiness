@@ -5,8 +5,8 @@ class ApiConstants {
   //   flutter run --dart-define=API_BASE_URL=https://staging-api.reweu.app
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://api.reweu.app',
-  // defaultValue: 'https://fafc-182-188-94-160.ngrok-free.app'
+   defaultValue: 'https://api.reweu.app',
+   //defaultValue: 'https://506f-182-188-94-160.ngrok-free.app'
   );
 
   // Endpoints
