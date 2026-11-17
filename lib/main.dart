@@ -164,6 +164,7 @@ class _ReweuBusinessAppState extends State<ReweuBusinessApp> with WidgetsBinding
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
       case AppLifecycleState.inactive:
+        break;
       case AppLifecycleState.hidden:
         setState(() => _obscured = true);
       case AppLifecycleState.paused:

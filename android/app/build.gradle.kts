@@ -67,8 +67,8 @@ android {
                 logger.warn("Reweu Business: no release keystore found, signing release with the debug key.")
                 signingConfig = signingConfigs.getByName("debug")
             }
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
