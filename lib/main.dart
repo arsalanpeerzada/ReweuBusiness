@@ -20,7 +20,9 @@ import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  try {
+    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  } catch (_) {}
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     systemNavigationBarColor: Colors.transparent,
@@ -28,8 +30,11 @@ void main() async {
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   GoogleFonts.config.allowRuntimeFetching = false;
-  await EasyLocalization.ensureInitialized();
-  await FirebaseBootstrap.init();
+  try {
+    await EasyLocalization.ensureInitialized().timeout(const Duration(seconds: 5));
+  } catch (e) {
+    debugPrint('EasyLocalization init failed: $e');
+  }
 
   final storageService = await StorageService.init();
   final apiService = ApiService(storageService: storageService);
@@ -137,6 +142,7 @@ class _ReweuBusinessAppState extends State<ReweuBusinessApp> with WidgetsBinding
   }
 
   Future<void> _startPush() async {
+    await FirebaseBootstrap.init();
     await widget.pushService.init();
     if (widget.storageService.hasToken) {
       await widget.pushService.registerDevice();
